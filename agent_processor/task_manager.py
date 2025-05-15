@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class ProcessorTaskManager(BaseTaskManager):
     """
     Task manager for the Processor Agent that handles all lifecycle operations
-    specific to processing user queries using Gemini 1.5 Pro
+    specific to processing user queries using Gemma 3
     """
     
     def __init__(self):

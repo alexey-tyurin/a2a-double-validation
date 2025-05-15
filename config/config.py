@@ -29,7 +29,7 @@ SAFEGUARD_CONFIG = AgentConfig(
 PROCESSOR_CONFIG = AgentConfig(
     port=8003,
     name="Processor Agent",
-    description="Agent that processes user queries using Gemini 1.5 Pro"
+    description="Agent that processes user queries using Gemma 3"
 )
 
 CRITIC_CONFIG = AgentConfig(
@@ -40,7 +40,7 @@ CRITIC_CONFIG = AgentConfig(
 
 # Model configuration
 GUARD_MODEL = "meta-llama/Llama-Prompt-Guard-2-86M"
-GEMMA_MODEL = "gemini-1.5-pro"
+GEMMA_MODEL = "gemma-3"  # Google's Gemma 3 model
 GEMINI_MODEL = "gemini-1.5-flash"
 
 # Environment variables that should be set

@@ -8,7 +8,7 @@ This system uses four agents that work together:
 
 1. **Manager Agent**: Coordinates the flow between agents
 2. **Safeguard Agent**: Checks user queries for vulnerabilities using Meta's Guard-2 model
-3. **Processor Agent**: Processes user queries using Gemini 1.5 Pro
+3. **Processor Agent**: Processes user queries using Gemma 3
 4. **Critic Agent**: Evaluates responses for completeness and validity using Gemini 1.5 Flash
 
 Each agent communicates using the Google Agent-to-Agent (A2A) Protocol for inter-agent communication, with FastAPI handling only external user-facing APIs.
@@ -39,7 +39,7 @@ Each agent folder contains:
 3. Safeguard Agent checks query safety with Guard-2 and returns assessment via A2A
 4. If the query is unsafe, Manager Agent rejects it
 5. If safe, Manager Agent sends query to Processor Agent via A2A
-6. Processor Agent processes query with Gemini 1.5 Pro and returns result via A2A
+6. Processor Agent processes query with Gemma 3 and returns result via A2A
 7. Manager Agent sends the query and response to Critic Agent via A2A
 8. Critic Agent evaluates response with Gemini 1.5 Flash and returns via A2A
 9. Manager Agent returns the processed response with evaluation to the user
@@ -49,7 +49,7 @@ Each agent folder contains:
 ### Requirements
 
 - Python 3.10+
-- Google API Key for Gemini models
+- Google API Key for Gemini and Gemma models
 - Google Vertex AI project for Guard-2 model access
 
 ### Installation

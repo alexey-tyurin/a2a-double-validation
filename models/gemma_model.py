@@ -20,7 +20,17 @@ class GemmaModel:
             raise ValueError("GOOGLE_API_KEY environment variable is required")
             
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(model_name=GEMMA_MODEL)
+        
+        # Configure the model
+        self.model = genai.GenerativeModel(
+            model_name=GEMMA_MODEL,
+            generation_config={
+                "temperature": 0.7,
+                "top_p": 0.95,
+                "top_k": 40,
+                "max_output_tokens": 2048,
+            }
+        )
     
     async def process_query(self, user_query: str) -> Dict[str, Any]:
         """
@@ -32,11 +42,14 @@ class GemmaModel:
         Returns:
             Dict: A dictionary containing the model response
         """
-        # Format prompt for Gemma 3
+        # Format prompt for Gemma 3 - using a simple, clear instruction format
+        # that works well with Gemma's instruction following capabilities
         prompt = f"""
-        User query: {user_query}
+        I need detailed information about the following question:
         
-        Please provide a thorough, accurate, and helpful response to this query.
+        {user_query}
+        
+        Please provide a comprehensive, accurate, and helpful response.
         """
         
         # Generate response
@@ -47,7 +60,8 @@ class GemmaModel:
         
         return {
             "response": response_text,
-            "original_query": user_query
+            "original_query": user_query,
+            "model": GEMMA_MODEL
         }
     
     async def _generate_content_async(self, prompt: str):

@@ -11,7 +11,7 @@ from agent_processor.task_manager import ProcessorTaskManager
 
 class ProcessorAgent(BaseAgent):
     """
-    Agent that processes user queries using Gemini 1.5 Pro
+    Agent that processes user queries using Gemma 3
     """
     
     def __init__(self):
@@ -26,18 +26,18 @@ class ProcessorAgent(BaseAgent):
     
     async def process_message(self, message: Message) -> Message:
         """
-        Process a user query using Gemini 1.5 Pro
+        Process a user query using Gemma 3
         
         Args:
             message: The message containing the user query
             
         Returns:
-            Message: The response message with Gemini's answer
+            Message: The response message with Gemma's answer
         """
         # Extract query from message
         query_text = self.get_text_from_message(message)
         
-        # Process the query with Gemini 1.5 Pro
+        # Process the query with Gemma 3
         result = await self.gemma_model.process_query(query_text)
         
         # Return response

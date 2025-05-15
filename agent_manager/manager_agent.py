@@ -116,7 +116,7 @@ class ManagerAgent(BaseAgent):
                     "I apologize, but your query contains content that cannot be processed as it may violate our safety guidelines."
                 )
             
-            # Step 2: Process with Processor Agent if safe
+            # Step 2: Process with Processor Agent (uses Gemma 3)
             if isinstance(self.task_manager, ManagerTaskManager):
                 self.task_manager.advance_workflow(task_id, "processor")
             
@@ -127,7 +127,7 @@ class ManagerAgent(BaseAgent):
             if isinstance(self.task_manager, ManagerTaskManager):
                 self.task_manager.register_agent_task(task_id, "processor", getattr(processor_response, 'task_id', None))
             
-            # Step 3: Get evaluation from Critic Agent
+            # Step 3: Get evaluation from Critic Agent (uses Gemini 1.5 Flash)
             if isinstance(self.task_manager, ManagerTaskManager):
                 self.task_manager.advance_workflow(task_id, "critic")
             
