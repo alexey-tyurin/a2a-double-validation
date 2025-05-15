@@ -6,7 +6,7 @@ from common.types import Message
 from agents.base_agent import BaseAgent
 from config.config import PROCESSOR_CONFIG
 from models.gemma_model import GemmaModel
-from agents.task_managers import ProcessorTaskManager
+from agent_processor.task_manager import ProcessorTaskManager
 
 
 class ProcessorAgent(BaseAgent):

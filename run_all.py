@@ -1,5 +1,18 @@
-import os
+#!/usr/bin/env python
+"""
+Run All Agents Script
+
+This script runs all agents in the system:
+- Manager Agent
+- Processor Agent
+- Critic Agent
+- Safeguard Agent
+
+Each agent can also be run individually using python -m agent_name
+"""
+
 import asyncio
+import os
 import logging
 from dotenv import load_dotenv
 
@@ -40,13 +53,18 @@ async def main():
     # Start all agents
     logger.info("Starting all agents...")
     
-    # Using asyncio.gather to start all agents concurrently
-    await asyncio.gather(
-        manager_agent.start_server(),
-        processor_agent.start_server(),
-        critic_agent.start_server(),
-        safeguard_agent.start_server()
-    )
+    try:
+        # Using asyncio.gather to start all agents concurrently
+        await asyncio.gather(
+            manager_agent.start_server(),
+            processor_agent.start_server(),
+            critic_agent.start_server(),
+            safeguard_agent.start_server()
+        )
+    except KeyboardInterrupt:
+        logger.info("System stopped by user")
+    except Exception as e:
+        logger.error(f"Error running agents: {e}")
 
 if __name__ == "__main__":
     try:

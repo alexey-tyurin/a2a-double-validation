@@ -7,7 +7,7 @@ from common.types import Message
 from agents.base_agent import BaseAgent
 from config.config import CRITIC_CONFIG
 from models.gemini_model import GeminiModel
-from agents.task_managers import CriticTaskManager
+from agent_critic.task_manager import CriticTaskManager
 
 
 class CriticAgent(BaseAgent):

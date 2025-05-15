@@ -8,7 +8,7 @@ from common.client import A2AClient
 
 from agents.base_agent import BaseAgent
 from config.config import MANAGER_CONFIG, SAFEGUARD_CONFIG, PROCESSOR_CONFIG, CRITIC_CONFIG
-from agents.task_managers import ManagerTaskManager
+from agent_manager.task_manager import ManagerTaskManager
 
 
 class ManagerAgent(BaseAgent):

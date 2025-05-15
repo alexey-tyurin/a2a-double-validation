@@ -6,7 +6,7 @@ from common.types import Message
 from agents.base_agent import BaseAgent
 from config.config import SAFEGUARD_CONFIG
 from models.guard_model import Guard2Model
-from agents.task_managers import SafeguardTaskManager
+from agent_safeguard.task_manager import SafeguardTaskManager
 
 
 class SafeguardAgent(BaseAgent):

@@ -13,6 +13,25 @@ This system uses four agents that work together:
 
 Each agent communicates using the Google Agent-to-Agent (A2A) Protocol for inter-agent communication, with FastAPI handling only external user-facing APIs.
 
+## Project Structure
+
+The project is organized by agent, with each agent in its own module:
+
+- **agent_manager/**: Manager Agent implementation
+- **agent_processor/**: Processor Agent implementation
+- **agent_critic/**: Critic Agent implementation
+- **agent_safeguard/**: Safeguard Agent implementation
+- **models/**: AI model integrations (Gemini, Gemma, Guard)
+- **config/**: Configuration settings
+- **utils/**: Utility functions
+- **common/**: Common types and A2A protocol implementation
+
+Each agent folder contains:
+- **__init__.py**: Module exports
+- **__main__.py**: Entry point for running the agent individually
+- **task_manager.py**: Agent-specific task management
+- **[agent_name].py**: Agent implementation
+
 ## Flow
 
 1. User sends a query to the Manager Agent
@@ -52,13 +71,39 @@ Each agent communicates using the Google Agent-to-Agent (A2A) Protocol for inter
 
 ## Running the System
 
-Start the A2A system:
+### Running All Agents
 
+You can start all agents at once using either:
+
+```bash
+python run_all.py
 ```
+
+or
+
+```bash
 python main.py
 ```
 
-This will start all agents with their respective ports:
+### Running Individual Agents
+
+You can also run agents individually, which is useful for development or debugging:
+
+```bash
+# Start the Manager Agent
+python -m agent_manager
+
+# Start the Processor Agent
+python -m agent_processor
+
+# Start the Critic Agent
+python -m agent_critic
+
+# Start the Safeguard Agent
+python -m agent_safeguard
+```
+
+The agents will be available on the following ports:
 
 - **A2A Communication Ports**:
   - Manager Agent: http://localhost:8001
