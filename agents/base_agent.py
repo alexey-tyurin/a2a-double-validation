@@ -23,7 +23,7 @@ from common.server import A2AServer
 from common.client import A2AClient
 
 from config.config import AgentConfig
-from utils.custom_task_manager import CustomTaskManager
+from utils.base_task_manager import BaseTaskManager
 
 
 class BaseAgent(ABC):
@@ -40,8 +40,9 @@ class BaseAgent(ABC):
         self.app = FastAPI(title=config.name)
         self.card = self._create_agent_card()
         
-        # Create A2A server for agent communication with custom task manager
-        self.task_manager = CustomTaskManager()
+        # Create A2A server for agent communication with base task manager
+        # This will be overridden by specific agent implementations
+        self.task_manager = BaseTaskManager()
         self.a2a_server = A2AServer(
             host=self.config.host,
             port=self.config.port,

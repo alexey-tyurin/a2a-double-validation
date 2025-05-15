@@ -7,16 +7,22 @@ from common.types import Message
 from agents.base_agent import BaseAgent
 from config.config import CRITIC_CONFIG
 from models.gemini_model import GeminiModel
+from agents.task_managers import CriticTaskManager
 
 
 class CriticAgent(BaseAgent):
     """
-    Agent that evaluates responses using Gemini 2.0 Flash
+    Agent that evaluates responses using Gemini 1.5 Flash
     """
     
     def __init__(self):
         """Initialize the critic agent"""
         super().__init__(CRITIC_CONFIG)
+        # Override the base task manager with critic-specific task manager
+        self.task_manager = CriticTaskManager()
+        self.a2a_server.task_manager = self.task_manager
+        self.task_manager.register_task_handler(self.process_a2a_task)
+        
         self.gemini_model = GeminiModel()
     
     async def process_message(self, message: Message) -> Message:
@@ -44,6 +50,13 @@ class CriticAgent(BaseAgent):
             
             # Evaluate the response
             evaluation = await self.gemini_model.evaluate_response(user_query, response)
+            
+            # Store evaluation in the task manager
+            task_id = getattr(message, 'task_id', None)
+            if task_id and isinstance(self.task_manager, CriticTaskManager):
+                if task_id in self.task_manager.evaluation_scores:
+                    self.task_manager.evaluation_scores[task_id]["score"] = evaluation.get('rating', 0)
+                    self.task_manager.evaluation_scores[task_id]["feedback"] = evaluation.get('explanation', '')
             
             # Format evaluation as text
             evaluation_text = (

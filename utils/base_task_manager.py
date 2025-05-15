@@ -5,7 +5,6 @@ from uuid import uuid4
 from typing import Callable, Any
 
 from common.server.task_manager import InMemoryTaskManager
-from common.server.utils import new_not_implemented_error
 from common.types import (
     SendTaskRequest,
     SendTaskResponse,
@@ -21,9 +20,9 @@ from common.types import (
 
 logger = logging.getLogger(__name__)
 
-class CustomTaskManager(InMemoryTaskManager):
+class BaseTaskManager(InMemoryTaskManager):
     """
-    Custom implementation of InMemoryTaskManager that implements the missing abstract methods
+    Base task manager implementation that all agent-specific task managers will inherit from
     """
     
     def __init__(self):

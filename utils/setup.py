@@ -1,6 +1,6 @@
 from common.server import A2AServer
 from config.config import ServerConfig
-from utils.custom_task_manager import CustomTaskManager
+from utils.base_task_manager import BaseTaskManager
 
 def setup_a2a_server() -> A2AServer:
     """
@@ -10,7 +10,7 @@ def setup_a2a_server() -> A2AServer:
         A2AServer: Configured A2A server instance
     """
     config = ServerConfig()
-    task_manager = CustomTaskManager()
+    task_manager = BaseTaskManager()
     
     server = A2AServer(
         host=config.host,
