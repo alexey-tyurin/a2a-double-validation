@@ -19,10 +19,11 @@ from common.types import (
     TaskStatus,
     TaskState
 )
-from common.server import A2AServer, InMemoryTaskManager
+from common.server import A2AServer
 from common.client import A2AClient
 
 from config.config import AgentConfig
+from utils.custom_task_manager import CustomTaskManager
 
 
 class BaseAgent(ABC):
@@ -39,8 +40,8 @@ class BaseAgent(ABC):
         self.app = FastAPI(title=config.name)
         self.card = self._create_agent_card()
         
-        # Create A2A server for agent communication
-        self.task_manager = InMemoryTaskManager()
+        # Create A2A server for agent communication with custom task manager
+        self.task_manager = CustomTaskManager()
         self.a2a_server = A2AServer(
             host=self.config.host,
             port=self.config.port,
@@ -48,7 +49,7 @@ class BaseAgent(ABC):
         )
         
         # Set up task callback for A2A protocol
-        self.a2a_server.register_task_handler(self.process_a2a_task)
+        self.task_manager.register_task_handler(self.process_a2a_task)
         
         # Setup external API endpoints (not for agent-to-agent communication)
         self._setup_api_endpoints()

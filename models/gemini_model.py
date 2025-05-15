@@ -2,27 +2,26 @@ import os
 from typing import Dict, Any, Optional
 import json
 
-import google.adk as adk
-from google.adk.generative_models import GenerativeModel
+import google.generativeai as genai
 
 from config.config import GEMINI_MODEL
 
 
 class GeminiModel:
     """
-    Interface for Gemini 2.0 Flash model using Google ADK
+    Interface for Gemini 2.0 Flash model using Google Generative AI
     """
     
     def __init__(self):
         """
-        Initialize the Gemini 2.0 Flash model using Google ADK
+        Initialize the Gemini 2.0 Flash model using Google Generative AI
         """
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY environment variable is required")
             
-        adk.init(api_key=api_key)
-        self.model = GenerativeModel(model_name=GEMINI_MODEL)
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel(model_name=GEMINI_MODEL)
     
     async def evaluate_response(self, user_query: str, response: str) -> Dict[str, Any]:
         """
@@ -60,7 +59,7 @@ class GeminiModel:
         """
         
         # Generate evaluation
-        evaluation = await self.model.generate_content_async(prompt)
+        evaluation = await self._generate_content_async(prompt)
         
         # Parse the evaluation result
         try:
@@ -91,4 +90,18 @@ class GeminiModel:
                 "explanation": f"Error parsing evaluation: {str(e)}. Original response: {evaluation_text}",
                 "user_query": user_query,
                 "evaluated_response": response
-            } 
+            }
+            
+    async def _generate_content_async(self, prompt: str):
+        """
+        Generate content asynchronously
+        
+        Args:
+            prompt: The prompt to generate content for
+            
+        Returns:
+            Response: The response from the model
+        """
+        # This is a wrapper that can be replaced with true async calls when available
+        import asyncio
+        return await asyncio.to_thread(self.model.generate_content, prompt) 
