@@ -18,13 +18,6 @@ class SafeguardAgent(BaseAgent):
         super().__init__(SAFEGUARD_CONFIG)
         self.guard_model = Guard2Model()
         
-        # Register the endpoint for this agent
-        @self.app.post("/agent/task")
-        async def handle_task(message: Dict[str, Any] = Body(...)):
-            user_message = Message.model_validate(message.get("message", {}))
-            response = await self.process_message(user_message)
-            return {"message": response.model_dump()}
-        
     async def process_message(self, message: Message) -> Message:
         """
         Process a message by checking for vulnerabilities

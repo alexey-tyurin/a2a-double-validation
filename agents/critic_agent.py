@@ -18,13 +18,6 @@ class CriticAgent(BaseAgent):
         """Initialize the critic agent"""
         super().__init__(CRITIC_CONFIG)
         self.gemini_model = GeminiModel()
-        
-        # Register the endpoint for this agent
-        @self.app.post("/agent/task")
-        async def handle_task(message: Dict[str, Any] = Body(...)):
-            user_message = Message.model_validate(message.get("message", {}))
-            response = await self.process_message(user_message)
-            return {"message": response.model_dump()}
     
     async def process_message(self, message: Message) -> Message:
         """

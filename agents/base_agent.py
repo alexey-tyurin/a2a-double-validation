@@ -2,6 +2,7 @@ import os
 import asyncio
 from typing import Callable, List, Optional, Dict, Any
 from abc import ABC, abstractmethod
+import uuid
 
 from fastapi import FastAPI
 import uvicorn
@@ -13,9 +14,12 @@ from common.types import (
     AgentAuthentication,
     AgentSkill,
     Message,
-    TextPart
+    TextPart,
+    Task,
+    TaskStatus,
+    TaskState
 )
-from common.server import A2AServer
+from common.server import A2AServer, InMemoryTaskManager
 from common.client import A2AClient
 
 from config.config import AgentConfig
@@ -35,6 +39,27 @@ class BaseAgent(ABC):
         self.app = FastAPI(title=config.name)
         self.card = self._create_agent_card()
         
+        # Create A2A server for agent communication
+        self.task_manager = InMemoryTaskManager()
+        self.a2a_server = A2AServer(
+            host=self.config.host,
+            port=self.config.port,
+            task_manager=self.task_manager
+        )
+        
+        # Set up task callback for A2A protocol
+        self.a2a_server.register_task_handler(self.process_a2a_task)
+        
+        # Setup external API endpoints (not for agent-to-agent communication)
+        self._setup_api_endpoints()
+    
+    def _setup_api_endpoints(self):
+        """
+        Set up external API endpoints (not for agent-to-agent communication)
+        This method can be overridden by subclasses to add custom endpoints
+        """
+        pass
+    
     def _create_agent_card(self) -> AgentCard:
         """
         Create an agent card with information about this agent
@@ -71,15 +96,50 @@ class BaseAgent(ABC):
         
     async def start_server(self):
         """
-        Start the agent server
+        Start the agent server (both A2A server and FastAPI server)
         """
+        # Start the A2A server
+        await self.a2a_server.start()
+        
+        # Start the FastAPI server
         config = uvicorn.Config(
             app=self.app,
             host=self.config.host,
-            port=self.config.port
+            port=self.config.port + 1000  # Use different port for FastAPI
         )
         server = uvicorn.Server(config)
         await server.serve()
+    
+    async def process_a2a_task(self, task: Task) -> Task:
+        """
+        Process a task received through A2A protocol
+        
+        Args:
+            task: The A2A task to process
+            
+        Returns:
+            Task: The updated task with response
+        """
+        # Extract user message from history
+        if task.history and len(task.history) > 0:
+            message = task.history[-1]
+            
+            # Process the message
+            response = await self.process_message(message)
+            
+            # Update task status
+            task.status = TaskStatus(
+                state=TaskState.COMPLETED,
+                message=response
+            )
+        else:
+            # No message in history, return error
+            task.status = TaskStatus(
+                state=TaskState.FAILED,
+                message=self.create_text_message("No message found in task history")
+            )
+        
+        return task
     
     @abstractmethod
     async def process_message(self, message: Message) -> Message:
@@ -93,6 +153,25 @@ class BaseAgent(ABC):
             Message: The response message
         """
         pass
+    
+    async def send_message_to_agent(self, agent_url: str, message: Message) -> Message:
+        """
+        Send a message to another agent using A2A protocol
+        
+        Args:
+            agent_url: The URL of the agent to send the message to
+            message: The message to send
+            
+        Returns:
+            Message: The response message
+        """
+        # Create A2A client for the agent
+        client = A2AClient(url=agent_url)
+        
+        # Send message using A2A protocol
+        response = await client.send_message(message)
+        
+        return response
     
     @staticmethod
     def create_text_message(text: str, role: str = "agent") -> Message:

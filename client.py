@@ -5,14 +5,15 @@ import requests
 from typing import Dict, Any, Optional
 
 
-def query_manager(query: str, host: str = "localhost", port: int = 8001) -> Optional[Dict[str, Any]]:
+def query_manager(query: str, host: str = "localhost", port: int = 9001) -> Optional[Dict[str, Any]]:
     """
     Send a query to the Manager Agent
     
     Args:
         query: The user query to send
         host: The host of the Manager Agent
-        port: The port of the Manager Agent
+        port: The port of the Manager Agent's FastAPI server (default: 9001)
+            (A2A port + 1000)
         
     Returns:
         Dict: The response from the Manager Agent, or None if there was an error
@@ -34,7 +35,7 @@ def main():
     parser = argparse.ArgumentParser(description="A2A Double Validation Client")
     parser.add_argument("--query", "-q", type=str, help="Query to send to the system")
     parser.add_argument("--host", type=str, default="localhost", help="Host of the Manager Agent")
-    parser.add_argument("--port", type=int, default=8001, help="Port of the Manager Agent")
+    parser.add_argument("--port", type=int, default=9001, help="Port of the Manager Agent's API (default: 9001)")
     
     args = parser.parse_args()
     

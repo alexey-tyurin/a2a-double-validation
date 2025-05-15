@@ -18,24 +18,13 @@ class ManagerAgent(BaseAgent):
         """Initialize the manager agent"""
         super().__init__(MANAGER_CONFIG)
         
-        # Initialize clients for other agents
-        self.safeguard_client = A2AClient(
-            url=f"http://{SAFEGUARD_CONFIG.host}:{SAFEGUARD_CONFIG.port}"
-        )
-        self.processor_client = A2AClient(
-            url=f"http://{PROCESSOR_CONFIG.host}:{PROCESSOR_CONFIG.port}"
-        )
-        self.critic_client = A2AClient(
-            url=f"http://{CRITIC_CONFIG.host}:{CRITIC_CONFIG.port}"
-        )
-        
-        # Register endpoints
-        @self.app.post("/agent/task")
-        async def handle_task(message: Dict[str, Any] = Body(...)):
-            user_message = Message.model_validate(message.get("message", {}))
-            response = await self.process_message(user_message)
-            return {"message": response.model_dump()}
-            
+        # Construct agent URLs for A2A communication
+        self.safeguard_url = f"http://{SAFEGUARD_CONFIG.host}:{SAFEGUARD_CONFIG.port}"
+        self.processor_url = f"http://{PROCESSOR_CONFIG.host}:{PROCESSOR_CONFIG.port}"
+        self.critic_url = f"http://{CRITIC_CONFIG.host}:{CRITIC_CONFIG.port}"
+    
+    def _setup_api_endpoints(self):
+        """Set up external API endpoints for user interaction"""
         @self.app.post("/api/query")
         async def handle_user_query(request: Request):
             data = await request.json()
@@ -64,7 +53,8 @@ class ManagerAgent(BaseAgent):
         
         # Step 1: Check for vulnerabilities with Safeguard Agent
         try:
-            safeguard_response = await self.safeguard_client.send_message(message)
+            # Send message to Safeguard Agent using A2A protocol
+            safeguard_response = await self.send_message_to_agent(self.safeguard_url, message)
             safeguard_text = self.get_text_from_message(safeguard_response)
             
             # Check if the query is safe
@@ -74,14 +64,14 @@ class ManagerAgent(BaseAgent):
                 )
                 
             # Step 2: Process with Processor Agent if safe
-            processor_response = await self.processor_client.send_message(message)
+            processor_response = await self.send_message_to_agent(self.processor_url, message)
             processor_text = self.get_text_from_message(processor_response)
             
             # Step 3: Get evaluation from Critic Agent
             critic_message = self.create_text_message(
                 f"{user_query} ||| {processor_text}"
             )
-            critic_response = await self.critic_client.send_message(critic_message)
+            critic_response = await self.send_message_to_agent(self.critic_url, critic_message)
             critic_text = self.get_text_from_message(critic_response)
             
             # Step 4: Construct final response with processor result and critic evaluation

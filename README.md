@@ -11,16 +11,18 @@ This system uses four agents that work together:
 3. **Processor Agent**: Processes user queries using Gemma 3
 4. **Critic Agent**: Evaluates responses for completeness and validity using Gemini 2.0 Flash
 
+Each agent communicates using the Google Agent-to-Agent (A2A) Protocol for inter-agent communication, with FastAPI handling only external user-facing APIs.
+
 ## Flow
 
 1. User sends a query to the Manager Agent
-2. Manager Agent sends user query to Safeguard Agent
-3. Safeguard Agent checks query safety with Guard-2 and returns assessment
+2. Manager Agent sends user query to Safeguard Agent via A2A
+3. Safeguard Agent checks query safety with Guard-2 and returns assessment via A2A
 4. If the query is unsafe, Manager Agent rejects it
-5. If safe, Manager Agent sends query to Processor Agent
-6. Processor Agent processes query with Gemma 3 and returns result
-7. Manager Agent sends the query and response to Critic Agent
-8. Critic Agent evaluates response with Gemini 2.0 Flash
+5. If safe, Manager Agent sends query to Processor Agent via A2A
+6. Processor Agent processes query with Gemma 3 and returns result via A2A
+7. Manager Agent sends the query and response to Critic Agent via A2A
+8. Critic Agent evaluates response with Gemini 2.0 Flash and returns via A2A
 9. Manager Agent returns the processed response with evaluation to the user
 
 ## Setup
@@ -56,12 +58,19 @@ Start the A2A system:
 python main.py
 ```
 
-This will start all four agents on separate ports:
-- Manager Agent: http://localhost:8001
-- Safeguard Agent: http://localhost:8002
-- Processor Agent: http://localhost:8003
-- Critic Agent: http://localhost:8004
-- A2A Server: http://localhost:8000
+This will start all agents with their respective ports:
+
+- **A2A Communication Ports**:
+  - Manager Agent: http://localhost:8001
+  - Safeguard Agent: http://localhost:8002
+  - Processor Agent: http://localhost:8003
+  - Critic Agent: http://localhost:8004
+
+- **External API Ports** (A2A port + 1000):
+  - Manager Agent API: http://localhost:9001
+  - Safeguard Agent API: http://localhost:9002
+  - Processor Agent API: http://localhost:9003
+  - Critic Agent API: http://localhost:9004
 
 ## Usage
 
@@ -88,7 +97,7 @@ python client.py --query "What is the capital of France?"
 Send a query to the Manager Agent's API endpoint:
 
 ```bash
-curl -X POST http://localhost:8001/api/query \
+curl -X POST http://localhost:9001/api/query \
   -H "Content-Type: application/json" \
   -d '{"query": "What is the capital of France?"}'
 ```
