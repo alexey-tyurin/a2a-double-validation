@@ -46,7 +46,8 @@ class BaseAgent(ABC):
         self.a2a_server = A2AServer(
             host=self.config.host,
             port=self.config.port,
-            task_manager=self.task_manager
+            task_manager=self.task_manager,
+            agent_card=self.card  # Pass the agent card to the A2AServer
         )
         
         # Set up task callback for A2A protocol

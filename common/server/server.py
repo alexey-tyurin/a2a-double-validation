@@ -53,7 +53,10 @@ class A2AServer:
             '/.well-known/agent.json', self._get_agent_card, methods=['GET']
         )
 
-    def start(self):
+    async def start(self):
+        """
+        Start the A2A server asynchronously
+        """
         if self.agent_card is None:
             raise ValueError('agent_card is not defined')
 
@@ -61,8 +64,9 @@ class A2AServer:
             raise ValueError('request_handler is not defined')
 
         import uvicorn
-
-        uvicorn.run(self.app, host=self.host, port=self.port)
+        config = uvicorn.Config(self.app, host=self.host, port=self.port)
+        server = uvicorn.Server(config)
+        await server.serve()
 
     def _get_agent_card(self, request: Request) -> JSONResponse:
         return JSONResponse(self.agent_card.model_dump(exclude_none=True))
