@@ -46,10 +46,34 @@ async def handle_query(request: Request):
         logger.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
+@app.get("/status")
+async def status():
+    """Health check endpoint that also shows agent status"""
+    try:
+        # Try to check if Manager Agent is running
+        manager_status = "Unknown"
+        try:
+            response = requests.get("http://localhost:9001/")
+            if response.status_code == 200:
+                manager_status = "Running"
+        except:
+            manager_status = "Not Running"
+        
+        return {
+            "status": "OK",
+            "agents": {
+                "manager": manager_status,
+                "api_port": 9001
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error in status endpoint: {e}")
+        return {"status": "Error", "message": str(e)}
+
 async def start_main_api():
     """Start the main API server"""
-    # Use port 7000 for main API to avoid conflict with agent ports
-    config = uvicorn.Config(app, host="0.0.0.0", port=7000)
+    # Use port 8005 for main API to avoid conflict with other services
+    config = uvicorn.Config(app, host="0.0.0.0", port=8005)
     server = uvicorn.Server(config)
     await server.serve()
 
