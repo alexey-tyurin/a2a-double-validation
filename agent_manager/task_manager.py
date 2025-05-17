@@ -29,9 +29,11 @@ class ManagerTaskManager(BaseTaskManager):
         Returns:
             Task: The preprocessed task
         """
-        logger.info(f"Preprocessing task {task.id} for Manager Agent")
+        task_id = task["id"] if isinstance(task, dict) else task.id
+        logger.info(f"Preprocessing task {task_id} for Manager Agent")
+        
         # Initialize workflow state for this task
-        self.workflow_states[task.id] = {
+        self.workflow_states[task_id] = {
             "current_stage": "init",
             "completed_stages": [],
             "pending_stages": ["safeguard", "processor", "critic"],
@@ -39,7 +41,7 @@ class ManagerTaskManager(BaseTaskManager):
         }
         
         # Initialize agent tasks mapping
-        self.agent_tasks[task.id] = {
+        self.agent_tasks[task_id] = {
             "safeguard_task_id": None,
             "processor_task_id": None,
             "critic_task_id": None
@@ -57,12 +59,13 @@ class ManagerTaskManager(BaseTaskManager):
         Returns:
             Task: The postprocessed task
         """
-        logger.info(f"Postprocessing task {task.id} for Manager Agent")
+        task_id = task["id"] if isinstance(task, dict) else task.id
+        logger.info(f"Postprocessing task {task_id} for Manager Agent")
         
         # Mark workflow as complete
-        if task.id in self.workflow_states:
-            self.workflow_states[task.id]["workflow_complete"] = True
-            self.workflow_states[task.id]["current_stage"] = "complete"
+        if task_id in self.workflow_states:
+            self.workflow_states[task_id]["workflow_complete"] = True
+            self.workflow_states[task_id]["current_stage"] = "complete"
         
         return task
     
