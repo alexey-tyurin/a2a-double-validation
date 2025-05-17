@@ -51,8 +51,8 @@ class ManagerAgent(BaseAgent):
                 # Create user message
                 user_message = self.create_text_message(user_query, role="user")
                 
-                # Add task_id to message for tracking
-                setattr(user_message, 'task_id', task_id)
+                # Add task_id to message metadata
+                user_message.metadata = {"task_id": task_id}
                 
                 # Initialize task in manager's task tracker
                 if isinstance(self.task_manager, ManagerTaskManager):
@@ -91,7 +91,8 @@ class ManagerAgent(BaseAgent):
             Message: The final response message
         """
         user_query = self.get_text_from_message(message)
-        task_id = getattr(message, 'task_id', str(uuid.uuid4()))
+        # Get task_id from metadata or create a new one
+        task_id = message.metadata.get("task_id", str(uuid.uuid4())) if message.metadata else str(uuid.uuid4())
         
         # Ensure we have a task manager and tracking is set up
         if isinstance(self.task_manager, ManagerTaskManager):
@@ -115,7 +116,8 @@ class ManagerAgent(BaseAgent):
             
             # Register the safeguard task
             if isinstance(self.task_manager, ManagerTaskManager):
-                self.task_manager.register_agent_task(task_id, "safeguard", getattr(safeguard_response, 'task_id', None))
+                safeguard_task_id = safeguard_response.metadata.get("task_id") if safeguard_response.metadata else None
+                self.task_manager.register_agent_task(task_id, "safeguard", safeguard_task_id)
             
             # Check if the query is safe
             if safeguard_text.startswith("UNSAFE"):
@@ -136,7 +138,8 @@ class ManagerAgent(BaseAgent):
             
             # Register the processor task
             if isinstance(self.task_manager, ManagerTaskManager):
-                self.task_manager.register_agent_task(task_id, "processor", getattr(processor_response, 'task_id', None))
+                processor_task_id = processor_response.metadata.get("task_id") if processor_response.metadata else None
+                self.task_manager.register_agent_task(task_id, "processor", processor_task_id)
             
             # Step 3: Get evaluation from Critic Agent (uses Gemini 1.5 Flash)
             if isinstance(self.task_manager, ManagerTaskManager):
@@ -145,15 +148,16 @@ class ManagerAgent(BaseAgent):
             critic_message = self.create_text_message(
                 f"{user_query} ||| {processor_text}"
             )
-            # Add task_id to critic message for tracking
-            setattr(critic_message, 'task_id', task_id)
+            # Add task_id to critic message metadata
+            critic_message.metadata = {"task_id": task_id}
             
             critic_response = await self.send_message_to_agent(self.critic_url, critic_message)
             critic_text = self.get_text_from_message(critic_response)
             
-            # Register the critic task
+            # Register the critic task - get task_id from metadata if available
             if isinstance(self.task_manager, ManagerTaskManager):
-                self.task_manager.register_agent_task(task_id, "critic", getattr(critic_response, 'task_id', None))
+                critic_task_id = critic_response.metadata.get("task_id") if critic_response.metadata else None
+                self.task_manager.register_agent_task(task_id, "critic", critic_task_id)
                 self.task_manager.advance_workflow(task_id, "complete")
             
             # Step 4: Construct final response with processor result and critic evaluation

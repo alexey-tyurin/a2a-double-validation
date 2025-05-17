@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# user_client.py - A2A Double Validation User Client
+# This file was renamed from client.py to avoid conflicts with the common/client package
+
 import argparse
 import json
 import sys

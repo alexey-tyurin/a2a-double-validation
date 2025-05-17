@@ -141,6 +141,12 @@ class BaseAgent(ABC):
             # Process the message
             response = await self.process_message(message)
             
+            # Ensure response has task_id in metadata
+            if not response.metadata:
+                response.metadata = {"task_id": task.id}
+            elif "task_id" not in response.metadata:
+                response.metadata["task_id"] = task.id
+            
             # Update task status
             task.status = TaskStatus(
                 state=TaskState.COMPLETED,
@@ -150,7 +156,7 @@ class BaseAgent(ABC):
             # No message in history, return error
             task.status = TaskStatus(
                 state=TaskState.FAILED,
-                message=self.create_text_message("No message found in task history")
+                message=self.create_text_message("No message found in task history", task_id=task.id)
             )
         
         return task
@@ -188,20 +194,23 @@ class BaseAgent(ABC):
         return response
     
     @staticmethod
-    def create_text_message(text: str, role: str = "agent") -> Message:
+    def create_text_message(text: str, role: str = "agent", task_id: str = None) -> Message:
         """
         Create a simple text message
         
         Args:
             text: The text content
             role: The role (agent or user)
+            task_id: Optional task ID for tracking (stored in metadata)
             
         Returns:
             Message: A message with text content
         """
+        metadata = {"task_id": task_id} if task_id else None
         return Message(
             role=role,
-            parts=[TextPart(text=text)]
+            parts=[TextPart(text=text)],
+            metadata=metadata
         )
     
     @staticmethod
