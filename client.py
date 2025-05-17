@@ -24,7 +24,12 @@ def query_manager(query: str, host: str = "localhost", port: int = 9001) -> Opti
     
     try:
         response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()  # Raise an exception for 4XX/5XX responses
         return response.json()
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP Error: {e}")
+        print(f"Response content: {e.response.content}")
+        return None
     except Exception as e:
         print(f"Error querying Manager Agent: {str(e)}")
         return None

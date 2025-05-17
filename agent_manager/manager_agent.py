@@ -31,43 +31,54 @@ class ManagerAgent(BaseAgent):
     
     def _setup_api_endpoints(self):
         """Set up external API endpoints for user interaction"""
+        
+        # Ensure FastAPI app is properly initialized
+        @self.app.get("/")
+        async def root():
+            """Root endpoint to test if API is running"""
+            return {"message": "Manager Agent API is running"}
+            
         @self.app.post("/api/query")
         async def handle_user_query(request: Request):
-            data = await request.json()
-            user_query = data.get("query", "")
-            
-            # Create a unique task ID for this workflow
-            task_id = str(uuid.uuid4())
-            
-            # Create user message
-            user_message = self.create_text_message(user_query, role="user")
-            
-            # Add task_id to message for tracking
-            setattr(user_message, 'task_id', task_id)
-            
-            # Initialize task in manager's task tracker
-            if isinstance(self.task_manager, ManagerTaskManager):
-                await self.task_manager.preprocess_task({
-                    "id": task_id,
-                    "status": None,
-                    "history": [user_message],
-                    "artifacts": []
-                })
-            
-            # Process through the agent flow
-            response = await self.process_message(user_message)
-            
-            # Complete task in manager's task tracker
-            if isinstance(self.task_manager, ManagerTaskManager):
-                await self.task_manager.postprocess_task({
-                    "id": task_id,
-                    "status": None,
-                    "history": [user_message, response],
-                    "artifacts": []
-                })
-            
-            # Return the final response
-            return {"response": self.get_text_from_message(response)}
+            """Handle user query and process through agent flow"""
+            try:
+                data = await request.json()
+                user_query = data.get("query", "")
+                
+                # Create a unique task ID for this workflow
+                task_id = str(uuid.uuid4())
+                
+                # Create user message
+                user_message = self.create_text_message(user_query, role="user")
+                
+                # Add task_id to message for tracking
+                setattr(user_message, 'task_id', task_id)
+                
+                # Initialize task in manager's task tracker
+                if isinstance(self.task_manager, ManagerTaskManager):
+                    await self.task_manager.preprocess_task({
+                        "id": task_id,
+                        "status": None,
+                        "history": [user_message],
+                        "artifacts": []
+                    })
+                
+                # Process through the agent flow
+                response = await self.process_message(user_message)
+                
+                # Complete task in manager's task tracker
+                if isinstance(self.task_manager, ManagerTaskManager):
+                    await self.task_manager.postprocess_task({
+                        "id": task_id,
+                        "status": None,
+                        "history": [user_message, response],
+                        "artifacts": []
+                    })
+                
+                # Return the final response
+                return {"response": self.get_text_from_message(response)}
+            except Exception as e:
+                return {"error": str(e)}
     
     async def process_message(self, message: Message) -> Message:
         """
