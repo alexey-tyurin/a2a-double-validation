@@ -188,10 +188,25 @@ class BaseAgent(ABC):
         # Create A2A client for the agent
         client = A2AClient(url=agent_url)
         
-        # Send message using A2A protocol
-        response = await client.send_message(message)
+        # Generate a unique task ID for this request
+        task_id = str(uuid.uuid4())
         
-        return response
+        # Create task payload
+        payload = {
+            "id": task_id,
+            "sessionId": str(uuid.uuid4()),
+            "message": message
+        }
+        
+        # Send task using A2A protocol
+        response = await client.send_task(payload)
+        
+        # Extract response message from task
+        if response.result and response.result.status and response.result.status.message:
+            return response.result.status.message
+        
+        # If no proper response, create an error message
+        return self.create_text_message(f"No valid response received from agent at {agent_url}")
     
     @staticmethod
     def create_text_message(text: str, role: str = "agent", task_id: str = None) -> Message:
