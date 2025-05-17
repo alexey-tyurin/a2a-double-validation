@@ -42,7 +42,7 @@ class BaseAgent(ABC):
         
         # A2A port is the base port
         self.a2a_port = self.config.port
-        # FastAPI port is A2A port + 1000
+        # FastAPI port is A2A port + 1000 (only used by Manager Agent)
         self.api_port = self.config.port + 1000
         
         # Create A2A server for agent communication with base task manager
@@ -59,6 +59,7 @@ class BaseAgent(ABC):
         self.task_manager.register_task_handler(self.process_a2a_task)
         
         # Setup external API endpoints (not for agent-to-agent communication)
+        # This is only used by the Manager Agent
         self._setup_api_endpoints()
     
     def _setup_api_endpoints(self):
@@ -104,11 +105,16 @@ class BaseAgent(ABC):
         
     async def start_server(self):
         """
-        Start the agent server (both A2A server and FastAPI server)
+        Start the agent's A2A server
         """
         # Start the A2A server
         await self.a2a_server.start()
-        
+    
+    async def start_api_server(self):
+        """
+        Start the agent's FastAPI server
+        Note: Only the Manager Agent should use this method
+        """
         # Start the FastAPI server
         config = uvicorn.Config(
             app=self.app,

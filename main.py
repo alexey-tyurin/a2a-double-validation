@@ -27,30 +27,11 @@ async def root():
     """Root endpoint to check if the API is running"""
     return {"message": "A2A Double Validation API is running"}
 
-@app.post("/api/query")
-async def handle_query(request: Request):
-    """Forward query to the Manager Agent"""
-    try:
-        data = await request.json()
-        manager_url = "http://localhost:9001/api/query"  # Manager Agent's FastAPI port
-        
-        # Forward the request to the Manager Agent
-        response = requests.post(manager_url, json=data)
-        response.raise_for_status()
-        
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error forwarding request to Manager Agent: {e}")
-        raise HTTPException(status_code=500, detail=f"Error communicating with Manager Agent: {str(e)}")
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
-
 @app.get("/status")
 async def status():
     """Health check endpoint that also shows agent status"""
     try:
-        # Try to check if Manager Agent is running
+        # Check if Manager Agent is running
         manager_status = "Unknown"
         try:
             response = requests.get("http://localhost:9001/")
@@ -62,8 +43,23 @@ async def status():
         return {
             "status": "OK",
             "agents": {
-                "manager": manager_status,
-                "api_port": 9001
+                "manager": {
+                    "status": manager_status,
+                    "a2a_port": 8001,
+                    "api_port": 9001
+                },
+                "processor": {
+                    "status": "A2A Only",
+                    "a2a_port": 8003
+                },
+                "critic": {
+                    "status": "A2A Only",
+                    "a2a_port": 8004
+                },
+                "safeguard": {
+                    "status": "A2A Only",
+                    "a2a_port": 8002
+                }
             }
         }
     except Exception as e:
@@ -101,14 +97,29 @@ async def main():
     # Start all agents
     logger.info("Starting all agents...")
     
-    # Using asyncio.gather to start all agents concurrently
-    await asyncio.gather(
-        manager_agent.start_server(),
-        processor_agent.start_server(),
-        critic_agent.start_server(),
-        safeguard_agent.start_server(),
-        start_main_api()  # Also start the main API
-    )
+    # Create tasks for all servers to run in parallel
+    tasks = []
+    
+    # A2A servers for all agents
+    tasks.append(asyncio.create_task(manager_agent.start_server()))
+    tasks.append(asyncio.create_task(processor_agent.start_server()))
+    tasks.append(asyncio.create_task(critic_agent.start_server()))
+    tasks.append(asyncio.create_task(safeguard_agent.start_server()))
+    
+    # Wait a moment for A2A servers to start before launching FastAPI
+    await asyncio.sleep(1)
+    
+    # FastAPI server for Manager Agent only
+    logger.info("Starting Manager Agent FastAPI server...")
+    tasks.append(asyncio.create_task(manager_agent.start_api_server()))
+    
+    # Start the main API
+    logger.info("Starting Main API server...")
+    tasks.append(asyncio.create_task(start_main_api()))
+    
+    # Wait for all tasks to complete (they won't unless terminated)
+    logger.info("All servers started. Press Ctrl+C to terminate.")
+    await asyncio.gather(*tasks)
 
 if __name__ == "__main__":
     try:

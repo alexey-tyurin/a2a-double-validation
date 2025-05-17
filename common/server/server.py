@@ -69,6 +69,8 @@ class A2AServer:
         await server.serve()
 
     def _get_agent_card(self, request: Request) -> JSONResponse:
+        if self.agent_card is None:
+            return JSONResponse({"error": "Agent card not defined"}, status_code=500)
         return JSONResponse(self.agent_card.model_dump(exclude_none=True))
 
     async def _process_request(self, request: Request):

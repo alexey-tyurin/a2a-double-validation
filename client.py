@@ -37,20 +37,56 @@ def query_manager(query: str, host: str = "localhost", port: int = 9001) -> Opti
         return None
 
 
+def check_system_status(host: str = "localhost", port: int = 8005) -> bool:
+    """
+    Check system status through the main API
+    
+    Args:
+        host: The host of the main API
+        port: The port of the main API (default: 8005)
+        
+    Returns:
+        bool: True if the system is running, False otherwise
+    """
+    url = f"http://{host}:{port}/status"
+    print(f"Checking system status at: {url}")
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        status_data = response.json()
+        print("Status response:")
+        print(json.dumps(status_data, indent=2))
+        
+        # Check if manager agent is running
+        manager_status = status_data.get("agents", {}).get("manager", {}).get("status", "Unknown")
+        if manager_status == "Running":
+            return True
+        else:
+            print(f"Manager Agent status: {manager_status}")
+            return False
+    except Exception as e:
+        print(f"Error checking system status: {str(e)}")
+        return False
+
+
 def main():
     """Main function for the client utility"""
     parser = argparse.ArgumentParser(description="A2A Double Validation Client")
     parser.add_argument("--query", "-q", type=str, help="Query to send to the system")
     parser.add_argument("--host", type=str, default="localhost", help="Host of the Manager Agent")
     parser.add_argument("--port", type=int, default=9001, help="Port of the Manager Agent's API (default: 9001)")
-    parser.add_argument("--use-main-api", action="store_true", help="Use the main API (port 8005) instead of connecting directly to the Manager Agent")
+    parser.add_argument("--status", action="store_true", help="Check system status")
     
     args = parser.parse_args()
     
-    # Override port if using main API
-    if args.use_main_api:
-        print("Using main API on port 8005")
-        args.port = 8005
+    # Check system status if requested
+    if args.status:
+        if check_system_status(args.host, 8005): # Always check status on main API port 8005
+            print("System is running and Manager Agent is available!")
+        else:
+            print("System is not fully operational. Manager Agent may not be available.")
+        return
     
     # If no query provided, enter interactive mode
     if not args.query:
