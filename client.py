@@ -22,6 +22,8 @@ def query_manager(query: str, host: str = "localhost", port: int = 9001) -> Opti
     headers = {"Content-Type": "application/json"}
     data = {"query": query}
     
+    print(f"Connecting to: {url}")
+    
     try:
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()  # Raise an exception for 4XX/5XX responses
@@ -41,8 +43,14 @@ def main():
     parser.add_argument("--query", "-q", type=str, help="Query to send to the system")
     parser.add_argument("--host", type=str, default="localhost", help="Host of the Manager Agent")
     parser.add_argument("--port", type=int, default=9001, help="Port of the Manager Agent's API (default: 9001)")
+    parser.add_argument("--use-main-api", action="store_true", help="Use the main API (port 7000) instead of connecting directly to the Manager Agent")
     
     args = parser.parse_args()
+    
+    # Override port if using main API
+    if args.use_main_api:
+        print("Using main API on port 7000")
+        args.port = 7000
     
     # If no query provided, enter interactive mode
     if not args.query:

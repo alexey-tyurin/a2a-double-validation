@@ -40,12 +40,17 @@ class BaseAgent(ABC):
         self.app = FastAPI(title=config.name)
         self.card = self._create_agent_card()
         
+        # A2A port is the base port
+        self.a2a_port = self.config.port
+        # FastAPI port is A2A port + 1000
+        self.api_port = self.config.port + 1000
+        
         # Create A2A server for agent communication with base task manager
         # This will be overridden by specific agent implementations
         self.task_manager = BaseTaskManager()
         self.a2a_server = A2AServer(
             host=self.config.host,
-            port=self.config.port,
+            port=self.a2a_port,
             task_manager=self.task_manager,
             agent_card=self.card  # Pass the agent card to the A2AServer
         )
@@ -108,7 +113,7 @@ class BaseAgent(ABC):
         config = uvicorn.Config(
             app=self.app,
             host=self.config.host,
-            port=self.config.port + 1000  # Use different port for FastAPI
+            port=self.api_port  # Use the API port (A2A port + 1000)
         )
         server = uvicorn.Server(config)
         await server.serve()
