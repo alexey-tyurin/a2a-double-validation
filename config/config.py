@@ -48,6 +48,7 @@ REQUIRED_ENV_VARS = [
     "GOOGLE_API_KEY",      # For Gemini models
     "VERTEX_AI_PROJECT",   # For Vertex AI
     "VERTEX_AI_LOCATION",  # For Vertex AI
+    "HUGGINGFACE_TOKEN",   # For Guard-2 model
 ]
 
 def validate_environment():

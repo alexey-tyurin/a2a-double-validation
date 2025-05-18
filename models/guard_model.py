@@ -1,8 +1,10 @@
 import os
+import re
 from typing import Dict, Any, Optional
+from pathlib import Path
 
-from langchain_google_vertexai import ChatVertexAI
-from langchain.schema import HumanMessage
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+import torch
 
 from config.config import GUARD_MODEL
 
@@ -14,20 +16,46 @@ class Guard2Model:
     
     def __init__(self):
         """
-        Initialize the Guard-2 model using VertexAI
+        Initialize the Guard-2 model using HuggingFace transformers
         """
-        project = os.getenv("VERTEX_AI_PROJECT")
-        location = os.getenv("VERTEX_AI_LOCATION")
+        # Get HuggingFace token from environment variables
+        huggingface_token = os.getenv("HUGGINGFACE_TOKEN")
+        if not huggingface_token:
+            raise ValueError("HUGGINGFACE_TOKEN environment variable is not set")
         
-        self.chat_model = ChatVertexAI(
-            model_name=GUARD_MODEL,
-            project=project,
-            location=location,
-            max_output_tokens=2048,
-            temperature=0,
-            top_p=0.95,
-            verbose=True
-        )
+        # Define model storage location
+        model_dir = Path("prompt_guard")
+        model_dir.mkdir(exist_ok=True)
+        
+        # Check if we're using GPU
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"Using device: {device}")
+        
+        # Load model and tokenizer
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                GUARD_MODEL,
+                token=huggingface_token,
+                cache_dir=model_dir
+            )
+            
+            self.model = AutoModelForCausalLM.from_pretrained(
+                GUARD_MODEL,
+                token=huggingface_token,
+                cache_dir=model_dir,
+                torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+                device_map=device
+            )
+            
+            # Create a text generation pipeline
+            self.pipe = pipeline(
+                "text-generation",
+                model=self.model,
+                tokenizer=self.tokenizer,
+                device=0 if device == "cuda" else -1
+            )
+        except Exception as e:
+            raise ValueError(f"Failed to load Guard-2 model: {str(e)}")
     
     async def check_vulnerability(self, user_query: str) -> Dict[str, Any]:
         """
@@ -50,16 +78,23 @@ class Guard2Model:
         Decision (SAFE/UNSAFE):
         """
         
-        # Send to Guard-2 model
-        response = await self.chat_model.ainvoke(
-            [HumanMessage(content=prompt)]
+        # Generate response using the model
+        response_list = self.pipe(
+            prompt,
+            max_new_tokens=512,
+            temperature=0.1,
+            top_p=0.95,
+            do_sample=True
         )
         
-        # Parse the response
-        response_text = response.content
+        # Extract response text
+        response_text = response_list[0]["generated_text"]
         
-        # Determine safety
-        is_safe = "SAFE" in response_text.upper()
+        # Remove the prompt from the response
+        response_text = response_text.replace(prompt, "").strip()
+        
+        # Determine safety based on presence of "UNSAFE" in response
+        is_safe = "UNSAFE" not in response_text.upper()
         
         return {
             "is_safe": is_safe,
