@@ -50,15 +50,16 @@ Each agent folder contains:
 
 - Python 3.10+
 - Google API Key for Gemini and Gemma models
-- Google Vertex AI project for Guard-2 model access
+- Google Vertex AI project for Vertex AI models
+- HuggingFace API Token for Guard-2 model
 
 ### Installation
 
 1. Clone the repository
-2. Create and activate a virtual environment:
+2. Create and activate a fresh virtual environment:
    ```
-   python -m venv a2a-env
-   source a2a-env/bin/activate  # On Windows: a2a-env\Scripts\activate
+   python -m venv fresh_env
+   source fresh_env/bin/activate  # On Windows: fresh_env\Scripts\activate
    ```
 3. Install dependencies:
    ```
@@ -68,6 +69,7 @@ Each agent folder contains:
    ```
    cp env.sample .env
    ```
+   Be sure to add your HuggingFace token for Guard-2 model access.
 
 ## Running the System
 
@@ -126,7 +128,7 @@ The project includes a client utility for interacting with the system:
 #### Interactive Mode
 
 ```bash
-python client.py
+python user_client.py
 ```
 
 This opens an interactive session where you can type queries and see responses.
@@ -134,7 +136,13 @@ This opens an interactive session where you can type queries and see responses.
 #### Single Query Mode
 
 ```bash
-python client.py --query "What is the capital of France?"
+python user_client.py --query "What is the capital of France?"
+```
+
+#### Check System Status
+
+```bash
+python user_client.py --status
 ```
 
 ### Using API Directly

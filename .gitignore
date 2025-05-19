@@ -174,3 +174,4 @@ cython_debug/
 .pypirc
 
 a2a-env/
+fresh_env/
