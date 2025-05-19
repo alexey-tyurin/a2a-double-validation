@@ -22,10 +22,13 @@ Ensure you have:
    pip install -r requirements.txt
    ```
    
-   > Note: The project uses `httpx-sse` for SSE connections, which is included in the requirements.txt file.
-   > If you encounter a "ModuleNotFoundError: No module named 'httpx_sse'" error, run:
+   > Note: The project uses some dependencies for server-sent events (SSE):
+   > - `httpx-sse` for client SSE connections
+   > - `sse-starlette` for server SSE responses
+   >
+   > If you encounter "ModuleNotFoundError" errors, run:
    > ```bash
-   > pip install httpx-sse
+   > pip install httpx-sse sse-starlette
    > ```
 
 3. **Set up environment variables:**
