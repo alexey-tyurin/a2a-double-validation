@@ -40,7 +40,7 @@ CRITIC_CONFIG = AgentConfig(
 
 # Model configuration
 GUARD_MODEL = "meta-llama/Llama-Prompt-Guard-2-86M"
-GEMMA_MODEL = "gemma-3"  # Google's Gemma 3 model
+GEMMA_MODEL = "gemma-3-27b-it"  # Google's Gemma 3 model
 GEMINI_MODEL = "gemini-1.5-flash"
 
 # Environment variables that should be set

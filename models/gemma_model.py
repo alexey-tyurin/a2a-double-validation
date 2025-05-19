@@ -18,19 +18,23 @@ class GemmaModel:
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY environment variable is required")
-            
-        genai.configure(api_key=api_key)
-        
-        # Configure the model
-        self.model = genai.GenerativeModel(
-            model_name=GEMMA_MODEL,
-            generation_config={
-                "temperature": 0.7,
-                "top_p": 0.95,
-                "top_k": 40,
-                "max_output_tokens": 2048,
-            }
-        )
+
+        try:
+            genai.configure(api_key=api_key)
+
+            # Configure the model
+            self.model = genai.GenerativeModel(
+                model_name=GEMMA_MODEL,
+                generation_config={
+                    "temperature": 0.7,
+                    "top_p": 0.95,
+                    "top_k": 40,
+                    "max_output_tokens": 512,
+                }
+            )
+        except Exception as e:
+            print(f"Error configuring or initializing the model: {e}")
+            exit()
     
     async def process_query(self, user_query: str) -> Dict[str, Any]:
         """
@@ -45,11 +49,13 @@ class GemmaModel:
         # Format prompt for Gemma 3 - using a simple, clear instruction format
         # that works well with Gemma's instruction following capabilities
         prompt = f"""
-        I need detailed information about the following question:
+        I need information about the following question:
         
         {user_query}
         
-        Please provide a comprehensive, accurate, and helpful response.
+        Please provide a concise, accurate, and helpful response for the question.
+        Do not include the question into the response.
+        Only provide an answer to the question.
         """
         
         # Generate response
