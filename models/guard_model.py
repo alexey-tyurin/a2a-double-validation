@@ -71,8 +71,8 @@ class Guard2Model:
         class_name = self.model.config.id2label[predicted_class_id]
         
         # Determine safety (benign means safe)
-        is_safe = class_name.lower() == "benign"
-        
+        is_safe = predicted_class_id == 0
+
         return {
             "is_safe": is_safe,
             "explanation": f"Classification: {class_name}",
