@@ -7,7 +7,7 @@ This guide will help you quickly set up and run the A2A Double Validation system
 Ensure you have:
 - Python 3.10+
 - Google API Key (for Gemini models)
-- HuggingFace Token (for Guard-2 model)
+- HuggingFace Token (for Prompt Guard 2 model)
 
 ## Setup Instructions
 
@@ -30,6 +30,12 @@ Ensure you have:
    > ```bash
    > pip install httpx-sse sse-starlette
    > ```
+   >
+   > This project requires NumPy 1.x (not 2.x) for compatibility with PyTorch.
+   > If you encounter NumPy-related errors, downgrade NumPy:
+   > ```bash
+   > pip install numpy==1.26.4
+   > ```
 
 3. **Set up environment variables:**
    ```bash
@@ -38,7 +44,7 @@ Ensure you have:
    
    Open the `.env` file and fill in:
    - `GOOGLE_API_KEY`: Your Google API key for Gemini models
-   - `HUGGINGFACE_TOKEN`: Your HuggingFace token for accessing Guard-2 model
+   - `HUGGINGFACE_TOKEN`: Your HuggingFace token for accessing Prompt Guard 2 model
    - `VERTEX_AI_PROJECT`: Your Google Cloud project ID (if using Vertex AI)
    - `VERTEX_AI_LOCATION`: Your Google Cloud region (default: us-central1)
 
@@ -67,7 +73,7 @@ When you run `main.py`, the system:
 
 1. **Initializes four specialized AI agents:**
    - Manager Agent: Coordinates the overall process flow
-   - Safeguard Agent: Checks queries for safety using Meta's Guard-2 model
+   - Safeguard Agent: Checks queries for safety using Meta's Prompt Guard 2 model
    - Processor Agent: Processes safe queries using Gemini 1.5 Pro
    - Critic Agent: Evaluates responses using Gemini 1.5 Flash
 
@@ -89,7 +95,7 @@ If you encounter issues:
    - Ensure your `GOOGLE_API_KEY` and `HUGGINGFACE_TOKEN` are valid
 
 2. **Check model access:**
-   - Verify your account has access to Guard-2 model on HuggingFace
+   - Verify your account has access to Prompt Guard 2 model on HuggingFace
    - Ensure you have proper permissions for Google Gemini models
 
 3. **Check ports:**

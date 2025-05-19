@@ -7,7 +7,7 @@ A Python implementation of Google's Agent-to-Agent (A2A) Protocol with a multi-a
 This system uses four agents that work together:
 
 1. **Manager Agent**: Coordinates the flow between agents
-2. **Safeguard Agent**: Checks user queries for vulnerabilities using Meta's Guard-2 model
+2. **Safeguard Agent**: Checks user queries for vulnerabilities using Meta's Prompt Guard 2 model
 3. **Processor Agent**: Processes user queries using Gemma 3
 4. **Critic Agent**: Evaluates responses for completeness and validity using Gemini 1.5 Flash
 
@@ -36,7 +36,7 @@ Each agent folder contains:
 
 1. User sends a query to the Manager Agent
 2. Manager Agent sends user query to Safeguard Agent via A2A
-3. Safeguard Agent checks query safety with Guard-2 and returns assessment via A2A
+3. Safeguard Agent checks query safety with Prompt Guard 2 and returns assessment via A2A
 4. If the query is unsafe, Manager Agent rejects it
 5. If safe, Manager Agent sends query to Processor Agent via A2A
 6. Processor Agent processes query with Gemma 3 and returns result via A2A
@@ -51,7 +51,7 @@ Each agent folder contains:
 - Python 3.10+
 - Google API Key for Gemini and Gemma models
 - Google Vertex AI project for Vertex AI models
-- HuggingFace API Token for Guard-2 model
+- HuggingFace API Token for Prompt Guard 2 model
 
 ### Installation
 
@@ -65,11 +65,18 @@ Each agent folder contains:
    ```
    pip install -r requirements.txt
    ```
+   
+   > **Note**: This project requires NumPy 1.x (not 2.x) for compatibility with PyTorch.
+   > If you encounter NumPy-related errors, downgrade NumPy:
+   > ```bash
+   > pip install numpy==1.26.4
+   > ```
+
 4. Copy `env.sample` to `.env` and fill in your API keys and project details:
    ```
    cp env.sample .env
    ```
-   Be sure to add your HuggingFace token for Guard-2 model access.
+   Be sure to add your HuggingFace token for Prompt Guard 2 model access.
 
 ## Running the System
 
