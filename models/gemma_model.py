@@ -33,8 +33,7 @@ class GemmaModel:
                 }
             )
         except Exception as e:
-            print(f"Error configuring or initializing the model: {e}")
-            exit()
+            raise ValueError(f"Error configuring or initializing the model: {str(e)}")
     
     async def process_query(self, user_query: str) -> Dict[str, Any]:
         """
@@ -53,7 +52,7 @@ class GemmaModel:
         
         {user_query}
         
-        Please provide a concise, accurate, and helpful response for the question.
+        Please provide a clear, accurate, and helpful response for the question.
         Do not include the question into the response.
         Only provide an answer to the question.
         """

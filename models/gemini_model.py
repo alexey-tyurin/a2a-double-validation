@@ -19,9 +19,12 @@ class GeminiModel:
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY environment variable is required")
-            
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(model_name=GEMINI_MODEL)
+
+        try:
+            genai.configure(api_key=api_key)
+            self.model = genai.GenerativeModel(model_name=GEMINI_MODEL)
+        except Exception as e:
+            raise ValueError(f"Error configuring or initializing the model: {str(e)}")
     
     async def evaluate_response(self, user_query: str, response: str) -> Dict[str, Any]:
         """
