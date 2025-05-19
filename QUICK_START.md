@@ -36,6 +36,11 @@ Ensure you have:
    > ```bash
    > pip install numpy==1.26.4
    > ```
+   >
+   > The Prompt Guard 2 model requires accelerate for efficient loading:
+   > ```bash
+   > pip install accelerate
+   > ```
 
 3. **Set up environment variables:**
    ```bash

@@ -71,6 +71,11 @@ Each agent folder contains:
    > ```bash
    > pip install numpy==1.26.4
    > ```
+   >
+   > The Prompt Guard 2 model requires accelerate for efficient loading:
+   > ```bash
+   > pip install accelerate
+   > ```
 
 4. Copy `env.sample` to `.env` and fill in your API keys and project details:
    ```

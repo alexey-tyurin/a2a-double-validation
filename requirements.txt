@@ -10,4 +10,5 @@ transformers==4.40.0
 torch==2.1.2
 httpx-sse>=0.3.1
 httpx>=0.25.0
-sse-starlette>=1.6.5 
+sse-starlette>=1.6.5
+accelerate>=1.7.0 
