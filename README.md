@@ -157,6 +157,33 @@ python user_client.py --query "What is the capital of France?"
 python user_client.py --status
 ```
 
+### Running Test Scenarios
+
+The project includes a test script for evaluating the system's performance with both benign queries and prompt injection attacks:
+
+```bash
+python test_a2a_scenarios.py
+```
+
+This will run 10 benign test queries and 10 prompt injection tests, and provide a summary of the results.
+
+#### Test Options
+
+```bash
+# Save test results to a JSON file
+python test_a2a_scenarios.py --output results.json
+
+# Test against a different host or port
+python test_a2a_scenarios.py --host your-host.com --port 9001
+```
+
+The test script will:
+- Process 20 predefined test queries (10 benign, 10 prompt injections)
+- Parse each response into its components (answer, evaluation, explanation)
+- Track which injection attempts were blocked by the system
+- Provide a summary of test results
+- Optionally save detailed results to a JSON file
+
 ### Using API Directly
 
 Send a query to the Manager Agent's API endpoint:
