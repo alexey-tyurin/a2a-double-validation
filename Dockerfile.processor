@@ -1,0 +1,34 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy only necessary files
+COPY config/ ./config/
+COPY utils/ ./utils/
+COPY common/ ./common/
+COPY models/ ./models/
+COPY agents/ ./agents/
+COPY __init__.py .
+COPY agent_processor/ ./agent_processor/
+
+# Copy environment variables template
+COPY env.sample1 .env
+
+# Expose A2A port and API port
+EXPOSE 8003 9003
+
+# Set environment variable to indicate cloud deployment
+ENV DEPLOYMENT_ENV=cloud
+
+# Allow external connections
+ENV HOST=0.0.0.0
+
+# Set Python to run in unbuffered mode
+ENV PYTHONUNBUFFERED=1
+
+# Run the Processor Agent
+CMD ["python", "-m", "agent_processor"] 

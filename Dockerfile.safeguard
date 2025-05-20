@@ -1,0 +1,35 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir accelerate
+
+# Copy only necessary files
+COPY config/ ./config/
+COPY utils/ ./utils/
+COPY common/ ./common/
+COPY models/ ./models/
+COPY agents/ ./agents/
+COPY __init__.py .
+COPY agent_safeguard/ ./agent_safeguard/
+
+# Copy environment variables template
+COPY env.sample1 .env
+
+# Expose A2A port and API port
+EXPOSE 8002 9002
+
+# Set environment variable to indicate cloud deployment
+ENV DEPLOYMENT_ENV=cloud
+
+# Allow external connections
+ENV HOST=0.0.0.0
+
+# Set Python to run in unbuffered mode
+ENV PYTHONUNBUFFERED=1
+
+# Run the Safeguard Agent
+CMD ["python", "-m", "agent_safeguard"] 

@@ -196,6 +196,57 @@ curl -X POST http://localhost:9001/api/query \
 
 The response will include both the answer and an evaluation of the response quality.
 
+## Cloud Deployment
+
+The A2A Double Validation system can be deployed to Google Cloud Run for scalable, serverless operation.
+
+### Prerequisites
+
+- Google Cloud Platform account
+- gcloud CLI installed and configured
+- Docker installed locally
+
+### Deployment Steps
+
+1. Create a copy of your environment file for cloud deployment:
+   ```bash
+   cp .env .env.cloud
+   ```
+   
+   Edit `.env.cloud` to include your API keys and credentials.
+
+2. Deploy all agents to Cloud Run:
+   ```bash
+   ./deploy_to_cloud_run.sh --project your-gcp-project-id
+   ```
+   
+   This script will:
+   - Build Docker images for each agent
+   - Push them to Google Container Registry
+   - Deploy them as Cloud Run services
+   - Configure environment variables from your `.env.cloud` file
+   - Generate a `cloud_config.py` file with service URLs
+
+### Cloud Client
+
+Once deployed, you can interact with the cloud-deployed system using the cloud client:
+
+```bash
+python user_client_cloud.py
+```
+
+The cloud client works similarly to the local client but connects to the Cloud Run endpoints automatically.
+
+### Cloud Testing
+
+You can also run test scenarios against the cloud deployment:
+
+```bash
+python test_a2a_scenarios_cloud.py
+```
+
+This will run the same test scenarios as the local test script but against the cloud deployment.
+
 ## License
 
 [License](LICENSE)

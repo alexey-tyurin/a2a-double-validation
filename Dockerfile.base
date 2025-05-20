@@ -1,0 +1,30 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy only necessary files
+COPY config/ ./config/
+COPY utils/ ./utils/
+COPY common/ ./common/
+COPY models/ ./models/
+COPY agents/ ./agents/
+COPY __init__.py .
+
+# Copy environment variables template
+COPY env.sample1 .env
+
+# Expose A2A port (this will be overridden in agent-specific Dockerfiles)
+EXPOSE 8000 9000
+
+# Set environment variable to indicate cloud deployment
+ENV DEPLOYMENT_ENV=cloud
+
+# Set Python to run in unbuffered mode
+ENV PYTHONUNBUFFERED=1
+
+# Default command (this will be overridden in agent-specific Dockerfiles)
+CMD ["python", "-m", "agent_module"] 

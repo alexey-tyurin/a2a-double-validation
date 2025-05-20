@@ -176,3 +176,4 @@ cython_debug/
 a2a-env/
 fresh_env/
 prompt_guard/
+env.sample1
