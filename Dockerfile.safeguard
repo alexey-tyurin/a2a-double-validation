@@ -16,8 +16,8 @@ COPY agents/ ./agents/
 COPY __init__.py .
 COPY agent_safeguard/ ./agent_safeguard/
 
-# Copy environment variables template
-COPY env.sample1 .env
+# Environment variables will be injected via Cloud Run
+# No need to copy env file here
 
 # Expose A2A port and API port
 EXPOSE 8002 9002

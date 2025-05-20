@@ -14,8 +14,8 @@ COPY models/ ./models/
 COPY agents/ ./agents/
 COPY __init__.py .
 
-# Copy environment variables template
-COPY env.sample1 .env
+# Environment variables will be injected via Cloud Run
+# No need to copy env file here
 
 # Expose A2A port (this will be overridden in agent-specific Dockerfiles)
 EXPOSE 8000 9000
