@@ -46,8 +46,7 @@ class SafeguardAgent(BaseAgent):
             if task_id in self.task_manager.vulnerability_checks:
                 self.task_manager.vulnerability_checks[task_id]["is_safe"] = safety_result.get('is_safe', False)
                 self.task_manager.vulnerability_checks[task_id]["risk_level"] = safety_result.get('risk_level', 'high')
-                self.task_manager.vulnerability_checks[task_id]["risk_factors"] = safety_result.get('risk_factors', [])
-        
+
         # Create response
         if safety_result["is_safe"]:
             response_text = f"SAFE: {safety_result['explanation']}"

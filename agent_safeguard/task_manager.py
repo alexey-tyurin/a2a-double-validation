@@ -32,7 +32,6 @@ class SafeguardTaskManager(BaseTaskManager):
         self.vulnerability_checks[task.id] = {
             "is_safe": None,  # Will be set to boolean after check
             "risk_level": "unknown",
-            "risk_factors": [],
             "check_complete": False
         }
         return task
