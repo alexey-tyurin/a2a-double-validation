@@ -35,13 +35,13 @@ PROCESSOR_CONFIG = AgentConfig(
 CRITIC_CONFIG = AgentConfig(
     port=8004,
     name="Critic Agent",
-    description="Agent that evaluates responses using Gemini 1.5 Flash"
+    description="Agent that evaluates responses using Gemini 2.0 Flash"
 )
 
 # Model configuration
 GUARD_MODEL = "meta-llama/Llama-Prompt-Guard-2-86M"
 GEMMA_MODEL = "gemma-3-27b-it"  # Google's Gemma 3 model
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-2.0-flash"
 
 # Environment variables that should be set
 REQUIRED_ENV_VARS = [
