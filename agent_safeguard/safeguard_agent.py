@@ -34,6 +34,30 @@ class SafeguardAgent(BaseAgent):
         Returns:
             Message: The response message with safety information
         """
+        # Get task ID from message metadata
+        task_id = message.metadata.get('task_id') if hasattr(message, 'metadata') and isinstance(message.metadata, dict) else None
+        
+        # Call preprocess_task if we have a task_id and task manager
+        if task_id and isinstance(self.task_manager, SafeguardTaskManager):
+            from common.types import Task, TaskStatus, TaskState
+            from datetime import datetime
+            
+            # Create a TaskStatus with required state
+            status = TaskStatus(
+                state=TaskState.SUBMITTED,
+                timestamp=datetime.now()
+            )
+            
+            # Create the Task with the required fields
+            task = Task(
+                id=task_id, 
+                status=status,
+                history=[message] if message else []
+            )
+            
+            # Call preprocess_task
+            task = await self.task_manager.preprocess_task(task)
+            
         # Extract text from message
         query_text = self.get_text_from_message(message)
         
@@ -41,7 +65,6 @@ class SafeguardAgent(BaseAgent):
         safety_result = await self.guard_model.check_vulnerability(query_text)
         
         # Store safety check in the task manager
-        task_id = message.metadata.get('task_id') if hasattr(message, 'metadata') and isinstance(message.metadata, dict) else None
         if task_id and isinstance(self.task_manager, SafeguardTaskManager):
             if task_id in self.task_manager.vulnerability_checks:
                 self.task_manager.vulnerability_checks[task_id]["is_safe"] = safety_result.get('is_safe', False)
