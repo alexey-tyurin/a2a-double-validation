@@ -41,7 +41,7 @@ class SafeguardAgent(BaseAgent):
         safety_result = await self.guard_model.check_vulnerability(query_text)
         
         # Store safety check in the task manager
-        task_id = message.metadata.task_id if hasattr(message, 'metadata') and hasattr(message.metadata, 'task_id') else None
+        task_id = message.metadata.get('task_id') if hasattr(message, 'metadata') and isinstance(message.metadata, dict) else None
         if task_id and isinstance(self.task_manager, SafeguardTaskManager):
             if task_id in self.task_manager.vulnerability_checks:
                 self.task_manager.vulnerability_checks[task_id]["is_safe"] = safety_result.get('is_safe', False)
