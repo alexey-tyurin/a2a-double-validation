@@ -75,5 +75,15 @@ class SafeguardAgent(BaseAgent):
             response_text = f"SAFE: {safety_result['explanation']}"
         else:
             response_text = f"UNSAFE: {safety_result['explanation']}"
-            
-        return self.create_text_message(response_text) 
+        
+        # Create response message
+        response_message = self.create_text_message(response_text)
+        
+        # Call postprocess_task before returning
+        if task_id and isinstance(self.task_manager, SafeguardTaskManager):
+            # Update the task with the response
+            task.status.message = response_message
+            task.status.state = TaskState.COMPLETED
+            task = await self.task_manager.postprocess_task(task)
+        
+        return response_message 

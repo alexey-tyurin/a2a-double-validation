@@ -35,6 +35,30 @@ class CriticAgent(BaseAgent):
         Returns:
             Message: The response message with evaluation
         """
+        # Get task ID from message metadata
+        task_id = message.metadata.get('task_id') if hasattr(message, 'metadata') and isinstance(message.metadata, dict) else None
+        
+        # Call preprocess_task if we have a task_id and task manager
+        if task_id and isinstance(self.task_manager, CriticTaskManager):
+            from common.types import Task, TaskStatus, TaskState
+            from datetime import datetime
+            
+            # Create a TaskStatus with required state
+            status = TaskStatus(
+                state=TaskState.SUBMITTED,
+                timestamp=datetime.now()
+            )
+            
+            # Create the Task with the required fields
+            task = Task(
+                id=task_id, 
+                status=status,
+                history=[message] if message else []
+            )
+            
+            # Call preprocess_task
+            task = await self.task_manager.preprocess_task(task)
+        
         # The message should contain: "USER_QUERY ||| RESPONSE"
         text_content = self.get_text_from_message(message)
         
@@ -64,6 +88,15 @@ class CriticAgent(BaseAgent):
                 f"Explanation: {evaluation['explanation']}"
             )
             
-            return self.create_text_message(evaluation_text)
+            response_message = self.create_text_message(evaluation_text)
+            
+            # Call postprocess_task before returning
+            if task_id and isinstance(self.task_manager, CriticTaskManager):
+                # Update the task with the response
+                task.status.message = response_message
+                task.status.state = TaskState.COMPLETED
+                task = await self.task_manager.postprocess_task(task)
+            
+            return response_message
         except Exception as e:
             return self.create_text_message(f"Error evaluating response: {str(e)}") 
