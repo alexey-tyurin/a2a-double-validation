@@ -76,7 +76,7 @@ class CriticAgent(BaseAgent):
             evaluation = await self.gemini_model.evaluate_response(user_query, response)
             
             # Store evaluation in the task manager
-            task_id = getattr(message, 'task_id', None)
+            # Note: task_id was already retrieved from message.metadata above
             if task_id and isinstance(self.task_manager, CriticTaskManager):
                 if task_id in self.task_manager.evaluation_scores:
                     self.task_manager.evaluation_scores[task_id]["score"] = evaluation.get('rating', 0)
