@@ -109,20 +109,12 @@ class A2ASystemTester:
                 "query": test_query,
                 "response": response.get("response", "No response"),
                 "critic_evaluation": response.get("evaluation", "No evaluation"),
-                "safeguard_result": response.get("safety_check", "No safety check"),
                 "time_taken": round(end_time - start_time, 2),
                 "success": True
             }
             
             # Print abbreviated results
             print(f"Response received in {result['time_taken']}s")
-            safeguard = response.get("safety_check", {})
-            safeguard_result = "UNKNOWN"
-            if isinstance(safeguard, dict):
-                safeguard_result = safeguard.get("is_safe", "UNKNOWN")
-            print(f"Safety check: {safeguard_result}")
-            if not safeguard_result:
-                print(f"Reason: {safeguard.get('reason', 'Not provided')}")
             print(f"Response preview: {response.get('response', 'No response')[:100]}...")
         else:
             result = {

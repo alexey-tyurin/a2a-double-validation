@@ -52,7 +52,7 @@ class GemmaModel:
         
         {user_query}
         
-        Please provide a clear, accurate, and helpful response for the question.
+        Please provide a concise, accurate, and helpful response for the question.
         Do not include the question into the response.
         Only provide an answer to the question.
         """
