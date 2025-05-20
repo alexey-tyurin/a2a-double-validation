@@ -15,6 +15,7 @@ COPY models/ ./models/
 COPY agents/ ./agents/
 COPY __init__.py .
 COPY agent_safeguard/ ./agent_safeguard/
+COPY prompt_guard/ ./prompt_guard/
 
 # Environment variables will be injected via Cloud Run
 # No need to copy env file here
