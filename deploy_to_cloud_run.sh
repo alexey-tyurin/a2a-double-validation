@@ -122,7 +122,8 @@ function deploy_agent {
     --cpu "$cpu" \
     --allow-unauthenticated \
     --min-instances 1 \
-    --max-instances 3 \
+    --max-instances 1 \
+#    --max-instances 3 \
     $env_vars
   
   # Get the service URL
