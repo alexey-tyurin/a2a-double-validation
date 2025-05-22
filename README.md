@@ -306,6 +306,22 @@ python test_a2a_scenarios_cloud.py
 
 This will run the same test scenarios as the local test script but against the cloud deployment.
 
+## 🙏 Acknowledgements
+
+This project relies on several advanced AI and communication technologies:
+
+- **Google Agent-to-Agent (A2A) Protocol**: For standardized inter-agent communication
+- **Google Agent Development Kit (ADK)**: For agent infrastructure components
+- **Meta's Llama Prompt Guard 2**: For safe query validation and prompt injection protection
+- **Google Gemma 3**: For efficient user query processing
+- **Google Gemini 2.0 Flash**: For rapid response evaluation and criticism
+
+Thanks to all the teams developing these cutting-edge technologies that make advanced multi-agent systems possible.
+
+## Contact Information
+
+For any questions or feedback, please contact Alexey Tyurin at altyurin3@gmail.com.
+
 ## License
 
 [License](LICENSE)
