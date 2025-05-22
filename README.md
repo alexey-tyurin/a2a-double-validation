@@ -53,6 +53,11 @@ Each agent folder contains:
 - Google Vertex AI project for Vertex AI models
 - HuggingFace API Token for Prompt Guard 2 model
 
+> **Important Note about Llama Prompt Guard 2**: To use the Llama Prompt Guard 2 model, you must:
+> 1. Fill out the "LLAMA 4 COMMUNITY LICENSE AGREEMENT" at [https://huggingface.co/meta-llama/Llama-Prompt-Guard-2-86M](https://huggingface.co/meta-llama/Llama-Prompt-Guard-2-86M)
+> 2. Get your request to access this repository approved by Meta
+> 3. Only after approval will you be able to download and use this model in the project
+
 ### Installation
 
 1. Clone the repository:
