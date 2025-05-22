@@ -270,14 +270,20 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
 
 ### Deployment Steps
 
-1. Create a copy of your environment file for cloud deployment:
+1. Copy `env.sample` to `.env` and fill in your API keys and project details:
+   ```bash
+   cp env.sample .env
+   ```
+   Be sure to add your HuggingFace token for Prompt Guard 2 model access.
+
+2. Create a copy of your environment file for cloud deployment:
    ```bash
    cp .env .env.cloud
    ```
    
    Edit `.env.cloud` to include your API keys and credentials.
 
-2. For VM-based deployments, you can use the provided setup script:
+3. For VM-based deployments, you can use the provided setup script:
    ```bash
    # Copy the setup script to your cloud VM
    scp setup_cloud.sh user@your-vm-ip:~/
@@ -295,7 +301,7 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    - Install all dependencies from requirements.txt
    - Start the application
 
-3. Deploy all agents to Cloud Run:
+4. Deploy all agents to Cloud Run:
    ```bash
    ./deploy_to_cloud_run.sh --project your-gcp-project-id
    ```
