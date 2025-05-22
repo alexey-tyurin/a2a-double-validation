@@ -104,6 +104,28 @@ or
 python main.py
 ```
 
+### Process Management
+
+The repository includes utility scripts to help you manage running processes:
+
+```bash
+# Check if all processes are running
+./check_processes.sh
+
+# Stop all running processes
+./kill_processes.sh
+```
+
+The `check_processes.sh` script will verify:
+- If the main Python process is running
+- If all A2A servers are listening on their expected ports
+- The count of running agent processes
+
+The `kill_processes.sh` script will:
+- Gracefully terminate all processes related to the application
+- Force kill any processes that don't respond to graceful termination
+- Clear any processes bound to the application's ports
+
 ### Running Individual Agents
 
 You can also run agents individually, which is useful for development or debugging:
@@ -249,6 +271,20 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    - Deploy them as Cloud Run services
    - Configure environment variables from your `.env.cloud` file
    - Generate a `cloud_config.py` file with service URLs
+
+### Cloud Process Management
+
+When running in a cloud environment, you can use the included process management scripts:
+
+```bash
+# Check status of all processes
+./check_processes.sh
+
+# Stop all processes (useful before redeployment)
+./kill_processes.sh
+```
+
+These scripts are particularly useful for VM-based deployments where you need to monitor process health or restart services.
 
 ### Cloud Client
 
