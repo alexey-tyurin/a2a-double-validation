@@ -10,9 +10,9 @@ graph TD
     User[User/Client] <-->|Query/Response| Manager[Manager Agent]
     
     subgraph "A2A Protocol Communication"
-        Manager <-->|1. Check Query Safety| Safeguard[Safeguard Agent]
-        Manager <-->|2. Process Query| Processor[Processor Agent]
-        Manager <-->|3. Evaluate Response| Critic[Critic Agent]
+        Manager <-->|Step 1: Check Query Safety| Safeguard[Safeguard Agent]
+        Manager <-->|Step 2: Process Query| Processor[Processor Agent]
+        Manager <-->|Step 3: Evaluate Response| Critic[Critic Agent]
     end
     
     Safeguard -->|Uses| Guard[Llama Prompt Guard 2]
