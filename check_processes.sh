@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Checking for A2A Double Validation processes..."
-echo "NOTE: System health is primarily determined by active ports, not process names"
+echo "NOTE: System health is determined by active ports"
 echo "-----------------------------------------------------------------"
 
 # Track overall system status
@@ -12,7 +12,7 @@ port_issues=false
 ports=(8001 8002 8003 8004 8005 9001)
 labels=("Manager A2A" "Safeguard A2A" "Processor A2A" "Critic A2A" "Main API" "Manager API")
 
-echo "PORT CHECKS (PRIMARY HEALTH INDICATOR):"
+echo "PORT CHECKS:"
 for i in "${!ports[@]}"; do
     if lsof -i :${ports[$i]} -sTCP:LISTEN > /dev/null; then
         echo "✅ ${labels[$i]} server (port ${ports[$i]}) is running"
@@ -20,28 +20,6 @@ for i in "${!ports[@]}"; do
         echo "❌ ${labels[$i]} server (port ${ports[$i]}) is NOT running"
         port_issues=true
         system_running=false
-    fi
-done
-
-echo "-----------------------------------------------------------------"
-echo "PROCESS NAME CHECKS (INFORMATIONAL ONLY):"
-
-# Check if main.py is running - this is just informational
-if pgrep -f "python main.py" > /dev/null; then
-    echo "✅ Main process (python main.py) is running"
-else
-    echo "ℹ️ Main process (python main.py) is not detected (but system may still be running)"
-fi
-
-# Additional check for Python processes related to agents - just informational
-agent_patterns=("agent_manager" "agent_processor" "agent_critic" "agent_safeguard")
-
-for pattern in "${agent_patterns[@]}"; do
-    count=$(pgrep -f "$pattern" | wc -l)
-    if [ "$count" -gt 0 ]; then
-        echo "✅ $pattern processes: $count running"
-    else
-        echo "ℹ️ $pattern processes not detected by name (but system may still be running)"
     fi
 done
 
