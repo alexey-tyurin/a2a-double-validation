@@ -55,7 +55,12 @@ Each agent folder contains:
 
 ### Installation
 
-1. Clone the repository
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/alexey-tyurin/a2a-double-validation.git
+   cd a2a-double-validation
+   ```
+
 2. Create and activate a fresh virtual environment:
    ```
    python -m venv fresh_env
@@ -215,7 +220,25 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    
    Edit `.env.cloud` to include your API keys and credentials.
 
-2. Deploy all agents to Cloud Run:
+2. For VM-based deployments, you can use the provided setup script:
+   ```bash
+   # Copy the setup script to your cloud VM
+   scp setup_cloud.sh user@your-vm-ip:~/
+   
+   # SSH into your VM and run the script
+   ssh user@your-vm-ip
+   cd ~/
+   chmod +x setup_cloud.sh
+   ./setup_cloud.sh
+   ```
+   
+   This script will:
+   - Install Python 3.10+ if not already installed
+   - Create a Python virtual environment
+   - Install all dependencies from requirements.txt
+   - Start the application
+
+3. Deploy all agents to Cloud Run:
    ```bash
    ./deploy_to_cloud_run.sh --project your-gcp-project-id
    ```
