@@ -5,6 +5,35 @@ Multi-agent system for query processing with safety verification and critique
 
 ## Architecture
 
+```mermaid
+graph TD
+    User[User/Client] <-->|Query/Response| Manager[Manager Agent]
+    
+    subgraph "A2A Protocol Communication"
+        Manager <-->|1. Check Query Safety| Safeguard[Safeguard Agent]
+        Manager <-->|2. Process Query| Processor[Processor Agent]
+        Manager <-->|3. Evaluate Response| Critic[Critic Agent]
+    end
+    
+    Safeguard -->|Uses| Guard[Llama Prompt Guard 2]
+    Processor -->|Uses| Gemma[Gemma 3 Model]
+    Critic -->|Uses| Gemini[Gemini 2.0 Flash]
+    
+    classDef models fill:#f9f,stroke:#333,stroke-width:2px
+    classDef agents fill:#bbf,stroke:#333,stroke-width:2px
+    classDef external fill:#fff,stroke:#333,stroke-width:2px
+    
+    class Guard,Gemma,Gemini models
+    class Manager,Safeguard,Processor,Critic agents
+    class User external
+    
+    %% Flow description
+    linkStyle 0 stroke:#000,stroke-width:2px
+    linkStyle 1 stroke:#f00,stroke-width:2px
+    linkStyle 2 stroke:#0a0,stroke-width:2px
+    linkStyle 3 stroke:#00f,stroke-width:2px
+```
+
 This system uses four agents that work together:
 
 1. **Manager Agent**: Coordinates the flow between agents
