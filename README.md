@@ -1,6 +1,7 @@
 # A2A Double Validation
 
-A Python implementation of Google's Agent-to-Agent (A2A) Protocol with a multi-agent system for query processing with safety verification and critique.
+Multi-agent system for query processing with safety verification and critique 
+  built with Google A2A protocol, Google ADK, Llama Prompt Guard 2, Gemma 3 and Gemini 2.0 Flash.
 
 ## Architecture
 
