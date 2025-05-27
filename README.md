@@ -123,6 +123,12 @@ Each agent folder contains:
    ```
    Be sure to add your HuggingFace token for Prompt Guard 2 model access.
 
+> **Note for Python 3.10 Users**: If you're using Python 3.10, you need to apply a compatibility patch after installation:
+> ```bash
+> python python310_compatibility_patch.py
+> ```
+> This patch updates the typing imports to work with Python 3.10. Python 3.11+ users don't need this step.
+
 ## Running the System
 
 ### Running All Agents
@@ -297,9 +303,27 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    
    This script will:
    - Install Python 3.10+ if not already installed
+   - Install Docker and Docker Compose if not already installed
+   - Install Google Cloud CLI if not already installed
    - Create a Python virtual environment
    - Install all dependencies from requirements.txt
+   - Apply Python 3.10 compatibility patch if needed
    - Start the application
+   
+   > **Note**: After Docker installation, you may need to log out and back in for group permissions to take effect. If you plan to use Cloud Run deployment, run `gcloud auth login` after the script completes.
+
+### Docker Permissions Issue
+
+If you encounter a Docker permissions error like "permission denied while trying to connect to the Docker daemon socket", run the fix script:
+
+```bash
+./fix_docker_permissions.sh
+```
+
+Then either:
+- **Option 1 (Recommended)**: Log out and log back in to activate group membership
+- **Option 2**: Use `newgrp docker` to activate the docker group in the current session
+- **Option 3**: Try running the deployment command again (sometimes it works immediately)
 
 4. Deploy all agents to Cloud Run:
    ```bash

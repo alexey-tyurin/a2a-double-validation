@@ -19,7 +19,7 @@ COPY agent_processor/ ./agent_processor/
 # No need to copy env file here
 
 # Expose A2A port and API port
-EXPOSE 8003 9003
+EXPOSE 8003
 
 # Set environment variable to indicate cloud deployment
 ENV DEPLOYMENT_ENV=cloud

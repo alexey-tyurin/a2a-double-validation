@@ -18,7 +18,7 @@ COPY __init__.py .
 # No need to copy env file here
 
 # Expose A2A port (this will be overridden in agent-specific Dockerfiles)
-EXPOSE 8000 9000
+EXPOSE 8000
 
 # Set environment variable to indicate cloud deployment
 ENV DEPLOYMENT_ENV=cloud
