@@ -45,10 +45,10 @@ GEMINI_MODEL = "gemini-2.0-flash"
 
 # Environment variables that should be set
 REQUIRED_ENV_VARS = [
-    "GOOGLE_API_KEY",      # For Gemini models
-    "VERTEX_AI_PROJECT",   # For Vertex AI
-    "VERTEX_AI_LOCATION",  # For Vertex AI
-    "HUGGINGFACE_TOKEN",   # For Prompt Guard 2 model
+    "GOOGLE_API_KEY",      # For Gemini models (from Secret Manager in cloud)
+    "VERTEX_AI_PROJECT",   # For Vertex AI (from env vars)
+    "VERTEX_AI_LOCATION",  # For Vertex AI (from env vars)
+    "HUGGINGFACE_TOKEN",   # For Prompt Guard 2 model (from Secret Manager in cloud)
 ]
 
 def is_cloud_deployment():
@@ -58,9 +58,11 @@ def is_cloud_deployment():
 def load_environment():
     """Load environment variables based on deployment type"""
     if is_cloud_deployment():
-        print("Running in cloud deployment mode - using environment variables")
+        print("Running in cloud deployment mode")
+        print("- Non-sensitive variables loaded from Cloud Run environment")
+        print("- Sensitive credentials (GOOGLE_API_KEY, HUGGINGFACE_TOKEN) loaded from Secret Manager")
         # In cloud deployment, environment variables are already set by Cloud Run
-        # No need to load from .env file
+        # Secrets are automatically mounted as environment variables by Cloud Run
         pass
     else:
         print("Running in local mode - loading from .env file")
@@ -78,7 +80,8 @@ def validate_environment():
         deployment_type = "cloud" if is_cloud_deployment() else "local"
         if deployment_type == "cloud":
             error_msg = f"Missing required environment variables in Cloud Run deployment: {', '.join(missing_vars)}"
-            error_msg += "\nThese should be set via --set-env-vars in the deployment script."
+            error_msg += "\nFor GOOGLE_API_KEY and HUGGINGFACE_TOKEN: Check Secret Manager setup"
+            error_msg += "\nFor VERTEX_AI_PROJECT and VERTEX_AI_LOCATION: Check --set-env-vars in deployment script"
         else:
             error_msg = f"Missing required environment variables in .env file: {', '.join(missing_vars)}"
             error_msg += "\nPlease set these variables in your .env file."

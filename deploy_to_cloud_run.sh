@@ -17,6 +17,19 @@ function show_usage {
   echo "  -r, --region    Google Cloud Region (default: us-central1)"
   echo "  -e, --env-file  Environment file to use (default: .env)"
   echo "  -h, --help      Show this help message"
+  echo ""
+  echo "Prerequisites:"
+  echo "  1. Create secrets in Secret Manager:"
+  echo "     gcloud secrets create google-api-key --replication-policy=\"automatic\""
+  echo "     echo -n \"your_actual_google_api_key\" | gcloud secrets versions add google-api-key --data-file=-"
+  echo "     gcloud secrets create huggingface-token --replication-policy=\"automatic\""
+  echo "     echo -n \"your_actual_huggingface_token\" | gcloud secrets versions add huggingface-token --data-file=-"
+  echo ""
+  echo "  2. Grant permissions to the default compute service account:"
+  echo "     PROJECT_NUMBER=\$(gcloud projects describe YOUR_PROJECT_ID --format='value(projectNumber)')"
+  echo "     SERVICE_ACCOUNT=\"\${PROJECT_NUMBER}-compute@developer.gserviceaccount.com\""
+  echo "     gcloud secrets add-iam-policy-binding google-api-key --member=\"serviceAccount:\${SERVICE_ACCOUNT}\" --role=\"roles/secretmanager.secretAccessor\""
+  echo "     gcloud secrets add-iam-policy-binding huggingface-token --member=\"serviceAccount:\${SERVICE_ACCOUNT}\" --role=\"roles/secretmanager.secretAccessor\""
   exit 1
 }
 
@@ -73,7 +86,7 @@ function load_env_vars {
   set +a  # stop automatically exporting
   
   # Validate required environment variables
-  required_vars=("GOOGLE_API_KEY" "VERTEX_AI_PROJECT" "VERTEX_AI_LOCATION" "HUGGINGFACE_TOKEN")
+  required_vars=("VERTEX_AI_PROJECT" "VERTEX_AI_LOCATION")
   missing_vars=()
   
   for var in "${required_vars[@]}"; do
@@ -90,16 +103,50 @@ function load_env_vars {
   fi
   
   echo "All required environment variables are set."
+  echo "Note: GOOGLE_API_KEY and HUGGINGFACE_TOKEN will be loaded from Secret Manager"
+}
+
+# Function to check if secrets exist
+function check_secrets {
+  echo "Checking if required secrets exist in Secret Manager..."
+  
+  local secrets_missing=false
+  
+  # Check google-api-key secret
+  if ! gcloud secrets describe google-api-key --project="$PROJECT_ID" >/dev/null 2>&1; then
+    echo "Error: Secret 'google-api-key' not found in Secret Manager"
+    secrets_missing=true
+  else
+    echo "✓ Secret 'google-api-key' found"
+  fi
+  
+  # Check huggingface-token secret
+  if ! gcloud secrets describe huggingface-token --project="$PROJECT_ID" >/dev/null 2>&1; then
+    echo "Error: Secret 'huggingface-token' not found in Secret Manager"
+    secrets_missing=true
+  else
+    echo "✓ Secret 'huggingface-token' found"
+  fi
+  
+  if [ "$secrets_missing" = true ]; then
+    echo ""
+    echo "Please create the missing secrets using the commands shown in --help"
+    exit 1
+  fi
 }
 
 # Load and validate environment variables
 load_env_vars
 
+# Check if secrets exist
+check_secrets
+
 # Confirm deployment
 echo "This script will deploy 4 agents to Google Cloud Run in project: $PROJECT_ID"
 echo "Region: $REGION"
 echo "Environment file: $ENV_FILE"
-echo "Environment variables will be set from the .env file (not copied to containers)"
+echo "Sensitive credentials will be loaded from Secret Manager"
+echo "Non-sensitive environment variables will be set directly"
 read -p "Do you want to continue? (y/n) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -133,10 +180,10 @@ function deploy_agent {
   echo "Pushing image to Google Container Registry"
   docker push "$image_name"
   
-  # Set environment variables for Cloud Run
-  echo "Setting environment variables for Cloud Run deployment..."
+  # Set environment variables and secrets for Cloud Run
+  echo "Setting environment variables and secrets for Cloud Run deployment..."
   
-  # Deploy to Cloud Run with environment variables
+  # Deploy to Cloud Run with environment variables and secrets
   echo "Deploying service to Cloud Run"
   gcloud run deploy "$service_name" \
     --image "$image_name" \
@@ -148,7 +195,8 @@ function deploy_agent {
     --allow-unauthenticated \
     --min-instances 1 \
     --max-instances 1 \
-    --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,GOOGLE_API_KEY=$GOOGLE_API_KEY,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION,HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN"
+    --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION" \
+    --set-secrets="GOOGLE_API_KEY=google-api-key:latest,HUGGINGFACE_TOKEN=huggingface-token:latest"
   
   # Get the service URL
   service_url=$(gcloud run services describe "$service_name" --platform managed --region "$REGION" --format='value(status.url)')

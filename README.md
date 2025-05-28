@@ -282,7 +282,18 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    ```
    Be sure to add your HuggingFace token for Prompt Guard 2 model access.
 
-2. For VM-based deployments, you can use the provided setup script:
+2. Set up Google Cloud Secret Manager for sensitive credentials:
+   ```bash
+   ./setup_secrets.sh --project your-gcp-project-id
+   ```
+   
+   This script will:
+   - Read `GOOGLE_API_KEY` and `HUGGINGFACE_TOKEN` from your `.env` file
+   - Create secrets in Google Cloud Secret Manager
+   - Grant access permissions to the default compute service account
+   - Enable the Secret Manager API if needed
+
+3. For VM-based deployments, you can use the provided setup script:
    ```bash
    # Copy the setup script to your cloud VM
    scp setup_cloud.sh user@your-vm-ip:~/
@@ -305,18 +316,11 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    
    > **Note**: After Docker installation, you may need to log out and back in for group permissions to take effect. If you plan to use Cloud Run deployment, run `gcloud auth login` after the script completes.
 
-3. Fix Docker permissions if needed:
-
-   If you encounter a Docker permissions error like "permission denied while trying to connect to the Docker daemon socket", run the fix script:
-
+   **Docker Permissions Fix**: If you encounter a Docker permissions error like "permission denied while trying to connect to the Docker daemon socket", run:
    ```bash
    ./fix_docker_permissions.sh
    ```
-
-   Then either:
-   - **Option 1 (Recommended)**: Log out and log back in to activate group membership
-   - **Option 2**: Use `newgrp docker` to activate the docker group in the current session
-   - **Option 3**: Try running the deployment command again (sometimes it works immediately)
+   Then either log out/in, use `newgrp docker`, or try the deployment again.
 
 4. Deploy all agents to Cloud Run:
    ```bash
@@ -324,14 +328,17 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    ```
    
    This script will:
-   - Read environment variables from your `.env` file
+   - Read non-sensitive environment variables from your `.env` file (`VERTEX_AI_PROJECT`, `VERTEX_AI_LOCATION`)
    - Validate that all required variables are set
+   - Check that required secrets exist in Secret Manager
    - Build Docker images for each agent
    - Push them to Google Container Registry
-   - Deploy them as Cloud Run services with environment variables set via `--set-env-vars`
+   - Deploy them as Cloud Run services with:
+     - Environment variables set via `--set-env-vars` (non-sensitive data)
+     - Secrets mounted via `--set-secrets` (sensitive credentials)
    - Generate a `cloud_config.py` file with service URLs
    
-   > **Important**: The deployment script reads from `.env` (not `.env.cloud`) and passes the environment variables to Cloud Run services. The containers themselves don't contain the `.env` file - they receive the variables as Cloud Run environment variables.
+   > **Security Note**: Sensitive credentials (`GOOGLE_API_KEY`, `HUGGINGFACE_TOKEN`) are stored securely in Google Cloud Secret Manager and mounted as environment variables at runtime. They are never embedded in container images or visible in deployment configurations.
 
 ### Cloud Process Management
 
