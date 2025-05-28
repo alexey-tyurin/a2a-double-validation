@@ -3,10 +3,9 @@ import asyncio
 import logging
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException
-from dotenv import load_dotenv
 import requests
 
-from config.config import validate_environment
+from config.config import validate_environment, load_environment
 from agent_manager.manager_agent import ManagerAgent
 from agent_processor.processor_agent import ProcessorAgent
 from agent_critic.critic_agent import CriticAgent
@@ -77,8 +76,8 @@ async def main():
     """
     Main function to start all agents
     """
-    # Load environment variables from .env file if it exists
-    load_dotenv()
+    # Load environment variables based on deployment type (local vs cloud)
+    load_environment()
     
     # Validate that all required environment variables are set
     try:

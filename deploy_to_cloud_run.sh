@@ -7,7 +7,7 @@ set -e
 # Default values
 PROJECT_ID=""
 REGION="us-central1"
-ENV_FILE=".env.cloud"
+ENV_FILE=".env"
 
 # Function to show usage
 function show_usage {
@@ -15,7 +15,7 @@ function show_usage {
   echo "Options:"
   echo "  -p, --project   Google Cloud Project ID (required)"
   echo "  -r, --region    Google Cloud Region (default: us-central1)"
-  echo "  -e, --env-file  Environment file to use (default: .env.cloud)"
+  echo "  -e, --env-file  Environment file to use (default: .env)"
   echo "  -h, --help      Show this help message"
   exit 1
 }
@@ -63,10 +63,43 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 1
 fi
 
+# Function to read and validate environment variables
+function load_env_vars {
+  echo "Loading environment variables from $ENV_FILE..."
+  
+  # Source the env file to load variables
+  set -a  # automatically export all variables
+  source "$ENV_FILE"
+  set +a  # stop automatically exporting
+  
+  # Validate required environment variables
+  required_vars=("GOOGLE_API_KEY" "VERTEX_AI_PROJECT" "VERTEX_AI_LOCATION" "HUGGINGFACE_TOKEN")
+  missing_vars=()
+  
+  for var in "${required_vars[@]}"; do
+    if [[ -z "${!var}" ]]; then
+      missing_vars+=("$var")
+    fi
+  done
+  
+  if [[ ${#missing_vars[@]} -gt 0 ]]; then
+    echo "Error: Missing required environment variables in $ENV_FILE:"
+    printf '  %s\n' "${missing_vars[@]}"
+    echo "Please set these variables in $ENV_FILE before deploying."
+    exit 1
+  fi
+  
+  echo "All required environment variables are set."
+}
+
+# Load and validate environment variables
+load_env_vars
+
 # Confirm deployment
 echo "This script will deploy 4 agents to Google Cloud Run in project: $PROJECT_ID"
 echo "Region: $REGION"
 echo "Environment file: $ENV_FILE"
+echo "Environment variables will be set from the .env file (not copied to containers)"
 read -p "Do you want to continue? (y/n) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -100,18 +133,10 @@ function deploy_agent {
   echo "Pushing image to Google Container Registry"
   docker push "$image_name"
   
-  # Read environment variables from file
-  env_vars="--set-env-vars=DEPLOYMENT_ENV=cloud,HOST=0.0.0.0"
-  while IFS='=' read -r key value || [[ -n "$key" ]]; do
-    # Skip comments and empty lines
-    if [[ "$key" =~ ^#.*$ ]] || [[ -z "$key" ]]; then
-      continue
-    fi
-    # Add env var
-    env_vars="$env_vars,${key}=${value}"
-  done < "$ENV_FILE"
+  # Set environment variables for Cloud Run
+  echo "Setting environment variables for Cloud Run deployment..."
   
-  # Deploy to Cloud Run
+  # Deploy to Cloud Run with environment variables
   echo "Deploying service to Cloud Run"
   gcloud run deploy "$service_name" \
     --image "$image_name" \
@@ -123,8 +148,7 @@ function deploy_agent {
     --allow-unauthenticated \
     --min-instances 1 \
     --max-instances 1 \
-#    --max-instances 3 \
-    $env_vars
+    --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,GOOGLE_API_KEY=$GOOGLE_API_KEY,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION,HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN"
   
   # Get the service URL
   service_url=$(gcloud run services describe "$service_name" --platform managed --region "$REGION" --format='value(status.url)')

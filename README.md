@@ -282,14 +282,7 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    ```
    Be sure to add your HuggingFace token for Prompt Guard 2 model access.
 
-2. Create a copy of your environment file for cloud deployment:
-   ```bash
-   cp .env .env.cloud
-   ```
-   
-   Edit `.env.cloud` to include your API keys and credentials.
-
-3. For VM-based deployments, you can use the provided setup script:
+2. For VM-based deployments, you can use the provided setup script:
    ```bash
    # Copy the setup script to your cloud VM
    scp setup_cloud.sh user@your-vm-ip:~/
@@ -312,18 +305,18 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    
    > **Note**: After Docker installation, you may need to log out and back in for group permissions to take effect. If you plan to use Cloud Run deployment, run `gcloud auth login` after the script completes.
 
-### Docker Permissions Issue
+3. Fix Docker permissions if needed:
 
-If you encounter a Docker permissions error like "permission denied while trying to connect to the Docker daemon socket", run the fix script:
+   If you encounter a Docker permissions error like "permission denied while trying to connect to the Docker daemon socket", run the fix script:
 
-```bash
-./fix_docker_permissions.sh
-```
+   ```bash
+   ./fix_docker_permissions.sh
+   ```
 
-Then either:
-- **Option 1 (Recommended)**: Log out and log back in to activate group membership
-- **Option 2**: Use `newgrp docker` to activate the docker group in the current session
-- **Option 3**: Try running the deployment command again (sometimes it works immediately)
+   Then either:
+   - **Option 1 (Recommended)**: Log out and log back in to activate group membership
+   - **Option 2**: Use `newgrp docker` to activate the docker group in the current session
+   - **Option 3**: Try running the deployment command again (sometimes it works immediately)
 
 4. Deploy all agents to Cloud Run:
    ```bash
@@ -331,11 +324,14 @@ Then either:
    ```
    
    This script will:
+   - Read environment variables from your `.env` file
+   - Validate that all required variables are set
    - Build Docker images for each agent
    - Push them to Google Container Registry
-   - Deploy them as Cloud Run services
-   - Configure environment variables from your `.env.cloud` file
+   - Deploy them as Cloud Run services with environment variables set via `--set-env-vars`
    - Generate a `cloud_config.py` file with service URLs
+   
+   > **Important**: The deployment script reads from `.env` (not `.env.cloud`) and passes the environment variables to Cloud Run services. The containers themselves don't contain the `.env` file - they receive the variables as Cloud Run environment variables.
 
 ### Cloud Process Management
 

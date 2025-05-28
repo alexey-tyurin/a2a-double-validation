@@ -1,10 +1,7 @@
-import os
 import asyncio
 import logging
-
-from dotenv import load_dotenv
-
-from config.config import validate_environment
+import sys
+from config.config import validate_environment, load_environment
 from agent_manager.manager_agent import ManagerAgent
 
 # Configure logging
@@ -18,29 +15,31 @@ async def main():
     """
     Main function to start the Manager Agent
     """
-    # Load environment variables from .env file if it exists
-    load_dotenv()
-    
-    # Validate that all required environment variables are set
     try:
+        # Load environment variables based on deployment type
+        load_environment()
+        
+        # Validate environment
         validate_environment()
+        
+        # Create and start the agent
+        agent = ManagerAgent()
+        
+        # Start both A2A server and API server
+        await asyncio.gather(
+            agent.start_server(),
+            agent.start_api_server()
+        )
+        
     except Exception as e:
-        logger.error(f"Environment validation failed: {e}")
-        return
-    
-    logger.info("Starting Manager Agent...")
-    
-    # Create and start the agent
-    agent = ManagerAgent()
-    
+        logger.error(f"Failed to start Manager Agent: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
     try:
-        # Start the agent's server
-        await agent.start_server()
+        asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Manager Agent stopped by user")
     except Exception as e:
-        logger.error(f"Error running Manager Agent: {e}")
-
-if __name__ == "__main__":
-    # Run the async main function
-    asyncio.run(main()) 
+        logger.error(f"Error: {e}")
+        sys.exit(1) 

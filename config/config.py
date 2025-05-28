@@ -51,11 +51,36 @@ REQUIRED_ENV_VARS = [
     "HUGGINGFACE_TOKEN",   # For Prompt Guard 2 model
 ]
 
+def is_cloud_deployment():
+    """Check if running in cloud deployment environment"""
+    return os.getenv("DEPLOYMENT_ENV") == "cloud"
+
+def load_environment():
+    """Load environment variables based on deployment type"""
+    if is_cloud_deployment():
+        print("Running in cloud deployment mode - using environment variables")
+        # In cloud deployment, environment variables are already set by Cloud Run
+        # No need to load from .env file
+        pass
+    else:
+        print("Running in local mode - loading from .env file")
+        # Load from .env file for local development
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+        except ImportError:
+            print("Warning: python-dotenv not installed. Environment variables must be set manually.")
+
 def validate_environment():
     """Validate that all required environment variables are set"""
     missing_vars = [var for var in REQUIRED_ENV_VARS if not os.getenv(var)]
     if missing_vars:
-        raise EnvironmentError(
-            f"Missing required environment variables: {', '.join(missing_vars)}"
-        )
+        deployment_type = "cloud" if is_cloud_deployment() else "local"
+        if deployment_type == "cloud":
+            error_msg = f"Missing required environment variables in Cloud Run deployment: {', '.join(missing_vars)}"
+            error_msg += "\nThese should be set via --set-env-vars in the deployment script."
+        else:
+            error_msg = f"Missing required environment variables in .env file: {', '.join(missing_vars)}"
+            error_msg += "\nPlease set these variables in your .env file."
+        raise EnvironmentError(error_msg)
     return True 

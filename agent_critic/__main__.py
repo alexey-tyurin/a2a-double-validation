@@ -1,10 +1,7 @@
-import os
 import asyncio
 import logging
-
-from dotenv import load_dotenv
-
-from config.config import validate_environment
+import sys
+from config.config import validate_environment, load_environment
 from agent_critic.critic_agent import CriticAgent
 
 # Configure logging
@@ -18,29 +15,28 @@ async def main():
     """
     Main function to start the Critic Agent
     """
-    # Load environment variables from .env file if it exists
-    load_dotenv()
-    
-    # Validate that all required environment variables are set
     try:
+        # Load environment variables based on deployment type
+        load_environment()
+        
+        # Validate environment
         validate_environment()
-    except Exception as e:
-        logger.error(f"Environment validation failed: {e}")
-        return
-    
-    logger.info("Starting Critic Agent...")
-    
-    # Create and start the agent
-    agent = CriticAgent()
-    
-    try:
+        
+        # Create and start the agent
+        agent = CriticAgent()
+        
         # Start the agent's server
         await agent.start_server()
+        
+    except Exception as e:
+        logger.error(f"Failed to start Critic Agent: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Critic Agent stopped by user")
     except Exception as e:
-        logger.error(f"Error running Critic Agent: {e}")
-
-if __name__ == "__main__":
-    # Run the async main function
-    asyncio.run(main()) 
+        logger.error(f"Error: {e}")
+        sys.exit(1) 
