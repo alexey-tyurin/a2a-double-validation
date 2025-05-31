@@ -40,16 +40,24 @@ class BaseAgent(ABC):
         self.app = FastAPI(title=config.name)
         self.card = self._create_agent_card()
         
-        # For Cloud Run deployment, use PORT environment variable if available
-        # Otherwise use the configured port
-        cloud_port = os.getenv("PORT")
-        if cloud_port and os.getenv("DEPLOYMENT_ENV") == "cloud":
-            # In cloud mode, Cloud Run automatically sets PORT environment variable
-            # Use it for both A2A and API servers
-            self.a2a_port = int(cloud_port)
-            self.api_port = int(cloud_port)
+        # For Cloud Run deployment, use environment variables for host and port
+        # Otherwise use the configured values
+        if os.getenv("DEPLOYMENT_ENV") == "cloud":
+            # In cloud mode, use environment variables
+            self.host = os.getenv("HOST", "0.0.0.0")  # Cloud Run requires 0.0.0.0
+            cloud_port = os.getenv("PORT")
+            if cloud_port:
+                # Cloud Run automatically sets PORT environment variable
+                # Use it for both A2A and API servers
+                self.a2a_port = int(cloud_port)
+                self.api_port = int(cloud_port)
+            else:
+                # Fallback to configured port if PORT not set
+                self.a2a_port = self.config.port
+                self.api_port = self.config.port
         else:
-            # Local mode - use configured ports
+            # Local mode - use configured values
+            self.host = self.config.host
             self.a2a_port = self.config.port
             # FastAPI port is A2A port + 1000 (only used by Manager Agent in local mode)
             self.api_port = self.config.port + 1000
@@ -58,7 +66,7 @@ class BaseAgent(ABC):
         # This will be overridden by specific agent implementations
         self.task_manager = BaseTaskManager()
         self.a2a_server = A2AServer(
-            host=self.config.host,
+            host=self.host,
             port=self.a2a_port,
             task_manager=self.task_manager,
             agent_card=self.card  # Pass the agent card to the A2AServer
@@ -88,7 +96,7 @@ class BaseAgent(ABC):
         return AgentCard(
             name=self.config.name,
             description=self.config.description,
-            url=f"http://{self.config.host}:{self.config.port}",
+            url=f"http://{self.host}:{self.a2a_port}",
             provider=AgentProvider(
                 organization="A2A Double Validation"
             ),
@@ -127,7 +135,7 @@ class BaseAgent(ABC):
         # Start the FastAPI server
         config = uvicorn.Config(
             app=self.app,
-            host=self.config.host,
+            host=self.host,
             port=self.api_port  # Use the API port (Cloud Run PORT or A2A port + 1000)
         )
         server = uvicorn.Server(config)
