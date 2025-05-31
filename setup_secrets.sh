@@ -20,6 +20,8 @@ function show_usage {
   echo "  1. Read GOOGLE_API_KEY and HUGGINGFACE_TOKEN from your .env file"
   echo "  2. Create secrets in Google Cloud Secret Manager"
   echo "  3. Grant access permissions to the default compute service account"
+  echo ""
+  echo "Note: This script should be run with a user account that has Secret Manager Admin permissions"
   exit 1
 }
 
@@ -58,6 +60,32 @@ if [[ ! -f "$ENV_FILE" ]]; then
   echo "Error: Environment file $ENV_FILE not found"
   echo "Please create $ENV_FILE with your GOOGLE_API_KEY and HUGGINGFACE_TOKEN"
   exit 1
+fi
+
+# Check current authentication
+echo "Checking current authentication..."
+CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null || echo "")
+if [[ -z "$CURRENT_ACCOUNT" ]]; then
+  echo "Error: No authenticated account found."
+  echo "Please run: gcloud auth login"
+  exit 1
+fi
+
+echo "Current authenticated account: $CURRENT_ACCOUNT"
+
+# Check if current account is a service account
+if [[ "$CURRENT_ACCOUNT" == *"@"*".gserviceaccount.com" ]]; then
+  echo "Warning: You are authenticated as a service account: $CURRENT_ACCOUNT"
+  echo "Service accounts typically don't have permission to grant IAM policies."
+  echo "Please authenticate with a user account that has Secret Manager Admin role:"
+  echo "  gcloud auth login"
+  echo ""
+  read -p "Do you want to continue anyway? (y/n) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Exiting. Please authenticate with a user account and try again."
+    exit 1
+  fi
 fi
 
 # Load environment variables from file
@@ -127,29 +155,45 @@ echo "Service Account: $SERVICE_ACCOUNT"
 
 # Grant permissions for google-api-key
 echo "Granting access to google-api-key secret..."
-gcloud secrets add-iam-policy-binding google-api-key \
+if gcloud secrets add-iam-policy-binding google-api-key \
   --member="serviceAccount:${SERVICE_ACCOUNT}" \
   --role="roles/secretmanager.secretAccessor" \
-  --project="$PROJECT_ID"
+  --project="$PROJECT_ID" 2>/dev/null; then
+  echo "✓ Permissions granted for google-api-key"
+else
+  echo "❌ Failed to grant permissions for google-api-key"
+  echo "You may need to run this command manually with an account that has Secret Manager Admin role:"
+  echo "gcloud secrets add-iam-policy-binding google-api-key --member=\"serviceAccount:${SERVICE_ACCOUNT}\" --role=\"roles/secretmanager.secretAccessor\" --project=\"$PROJECT_ID\""
+fi
 
 # Grant permissions for huggingface-token
 echo "Granting access to huggingface-token secret..."
-gcloud secrets add-iam-policy-binding huggingface-token \
+if gcloud secrets add-iam-policy-binding huggingface-token \
   --member="serviceAccount:${SERVICE_ACCOUNT}" \
   --role="roles/secretmanager.secretAccessor" \
-  --project="$PROJECT_ID"
+  --project="$PROJECT_ID" 2>/dev/null; then
+  echo "✓ Permissions granted for huggingface-token"
+else
+  echo "❌ Failed to grant permissions for huggingface-token"
+  echo "You may need to run this command manually with an account that has Secret Manager Admin role:"
+  echo "gcloud secrets add-iam-policy-binding huggingface-token --member=\"serviceAccount:${SERVICE_ACCOUNT}\" --role=\"roles/secretmanager.secretAccessor\" --project=\"$PROJECT_ID\""
+fi
 
 echo ""
 echo "===================================================="
-echo "✅ Secrets setup completed successfully!"
+echo "✅ Secrets setup completed!"
 echo "===================================================="
 echo ""
 echo "Created secrets:"
 echo "  - google-api-key"
 echo "  - huggingface-token"
 echo ""
-echo "Granted access to service account:"
+echo "Target service account:"
 echo "  - $SERVICE_ACCOUNT"
+echo ""
+echo "If permission granting failed, you can:"
+echo "1. Authenticate with a user account: gcloud auth login"
+echo "2. Or grant permissions manually in the Google Cloud Console"
 echo ""
 echo "You can now run the deployment script:"
 echo "  ./deploy_to_cloud_run.sh --project $PROJECT_ID" 
