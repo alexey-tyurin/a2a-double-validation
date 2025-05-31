@@ -121,9 +121,11 @@ echo "===================================================="
 deleted_count=0
 failed_count=0
 
+echo "🔍 Starting deletion loop for ${#existing_services[@]} services..."
+
 for service in "${existing_services[@]}"; do
   echo ""
-  echo "🗑️  Deleting $service..."
+  echo "🗑️  Deleting $service... (Service $((deleted_count + failed_count + 1)) of ${#existing_services[@]})"
   
   # Temporarily disable exit on error for individual service deletion
   set +e
@@ -138,7 +140,11 @@ for service in "${existing_services[@]}"; do
     echo "  ❌ Failed to delete $service (exit code: $delete_result)"
     ((failed_count++))
   fi
+  
+  echo "  📊 Progress: Deleted $deleted_count, Failed $failed_count, Remaining $((${#existing_services[@]} - deleted_count - failed_count))"
 done
+
+echo "🏁 Deletion loop completed."
 
 echo ""
 echo "===================================================="
