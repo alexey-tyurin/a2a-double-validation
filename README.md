@@ -282,7 +282,13 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    ```
    Be sure to add your HuggingFace token for Prompt Guard 2 model access.
 
-2. Set up Google Cloud Secret Manager for sensitive credentials:
+2. Authenticate with Google Cloud:
+   ```bash
+   gcloud auth login
+   ```
+   This ensures you have the necessary permissions to create secrets and grant access to service accounts.
+
+3. Set up Google Cloud Secret Manager for sensitive credentials:
    ```bash
    ./setup_secrets.sh --project your-gcp-project-id
    ```
@@ -293,7 +299,7 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    - Grant access permissions to the default compute service account
    - Enable the Secret Manager API if needed
 
-3. For VM-based deployments, you can use the provided setup script:
+4. For VM-based deployments, you can use the provided setup script:
    ```bash
    # Copy the setup script to your cloud VM
    scp setup_cloud.sh user@your-vm-ip:~/
@@ -322,7 +328,7 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    ```
    Then either log out/in, use `newgrp docker`, or try the deployment again.
 
-4. Deploy all agents to Cloud Run:
+5. Deploy all agents to Cloud Run:
    ```bash
    ./deploy_to_cloud_run.sh --project your-gcp-project-id
    ```
