@@ -346,6 +346,50 @@ The A2A Double Validation system can be deployed to Google Cloud Run for scalabl
    
    > **Security Note**: Sensitive credentials (`GOOGLE_API_KEY`, `HUGGINGFACE_TOKEN`) are stored securely in Google Cloud Secret Manager and mounted as environment variables at runtime. They are never embedded in container images or visible in deployment configurations.
 
+### Cloud Service Management
+
+Once your services are deployed, you can use the included management scripts to monitor and control them:
+
+#### Check Cloud Services Status
+
+```bash
+# Check status of all A2A Cloud Run services
+./check_cloud_status.sh --project your-gcp-project-id
+
+# Check services in a different region
+./check_cloud_status.sh --project your-gcp-project-id --region us-central1
+```
+
+The status check script will:
+- List all A2A Cloud Run services and their status
+- Show detailed information for each service (URL, status, latest revision)
+- Test endpoint connectivity for each service
+- Provide a summary of service URLs for easy access
+- Give helpful tips for troubleshooting
+
+#### Stop/Delete Cloud Services
+
+```bash
+# Delete all A2A Cloud Run services (with confirmation)
+./kill_cloud_services.sh --project your-gcp-project-id
+
+# Force deletion without confirmation prompt
+./kill_cloud_services.sh --project your-gcp-project-id --force
+
+# Delete services in a different region
+./kill_cloud_services.sh --project your-gcp-project-id --region us-central1
+```
+
+The deletion script will:
+- Check which A2A services exist before deletion
+- Show a summary of services to be deleted
+- Prompt for confirmation (unless `--force` is used)
+- Delete all A2A Cloud Run services
+- Clean up temporary deployment files (`url_*.txt`, `cloud_config.py`)
+- Provide a summary of the deletion operation
+
+> **Note**: Deleting Cloud Run services is permanent and cannot be undone. The services will need to be redeployed using the deployment script.
+
 ### Cloud Process Management
 
 When running in a cloud environment, you can use the included process management scripts:
