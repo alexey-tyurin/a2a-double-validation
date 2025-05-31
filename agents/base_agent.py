@@ -44,7 +44,8 @@ class BaseAgent(ABC):
         # Otherwise use the configured port
         cloud_port = os.getenv("PORT")
         if cloud_port and os.getenv("DEPLOYMENT_ENV") == "cloud":
-            # In cloud mode, all agents listen on the PORT environment variable
+            # In cloud mode, Cloud Run automatically sets PORT environment variable
+            # Use it for both A2A and API servers
             self.a2a_port = int(cloud_port)
             self.api_port = int(cloud_port)
         else:

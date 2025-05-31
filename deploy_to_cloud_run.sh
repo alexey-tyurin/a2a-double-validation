@@ -265,7 +265,7 @@ function deploy_agent {
       --min-instances 1 \
       --max-instances 1 \
       --timeout 300 \
-      --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,PORT=$port,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION" \
+      --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION" \
       --set-secrets="GOOGLE_API_KEY=google-api-key:latest,HUGGINGFACE_TOKEN=huggingface-token:latest"
   else
     # Deploy other agents normally (they only run A2A servers)
@@ -281,7 +281,7 @@ function deploy_agent {
       --min-instances 1 \
       --max-instances 1 \
       --timeout 300 \
-      --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,PORT=$port,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION" \
+      --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION" \
       --set-secrets="GOOGLE_API_KEY=google-api-key:latest,HUGGINGFACE_TOKEN=huggingface-token:latest"
   fi
   
@@ -312,7 +312,7 @@ CRITIC_URL=$(cat url_critic.txt)
 gcloud run services update a2a-manager-agent \
   --platform managed \
   --region "$REGION" \
-  --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,PORT=9001,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION,SAFEGUARD_URL=$SAFEGUARD_URL,PROCESSOR_URL=$PROCESSOR_URL,CRITIC_URL=$CRITIC_URL"
+  --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION,SAFEGUARD_URL=$SAFEGUARD_URL,PROCESSOR_URL=$PROCESSOR_URL,CRITIC_URL=$CRITIC_URL"
 
 echo "===================================================="
 echo "All agents deployed successfully!"
