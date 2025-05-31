@@ -1,9 +1,6 @@
 #!/bin/bash
 # Script to stop/delete A2A Cloud Run services
 
-# Exit immediately if a command exits with a non-zero status
-set -e
-
 # Default values
 PROJECT_ID=""
 REGION="us-central1"
@@ -65,7 +62,11 @@ echo "Managing Cloud Run services in project: $PROJECT_ID"
 echo "Region: $REGION"
 echo ""
 
-gcloud config set project "$PROJECT_ID"
+if ! gcloud config set project "$PROJECT_ID"; then
+  echo "❌ Error: Failed to set Google Cloud project to $PROJECT_ID"
+  echo "Please check that the project exists and you have access to it."
+  exit 1
+fi
 
 # Array of service names
 services=("a2a-manager-agent" "a2a-safeguard-agent" "a2a-processor-agent" "a2a-critic-agent")
@@ -127,16 +128,12 @@ for service in "${existing_services[@]}"; do
   echo ""
   echo "🗑️  Deleting $service... (Service $((deleted_count + failed_count + 1)) of ${#existing_services[@]})"
   
-  # Temporarily disable exit on error for individual service deletion
-  set +e
-  gcloud run services delete "$service" --region="$REGION" --quiet
-  delete_result=$?
-  set -e
-  
-  if [[ $delete_result -eq 0 ]]; then
+  # Delete the service and capture the exit code
+  if gcloud run services delete "$service" --region="$REGION" --quiet; then
     echo "  ✅ Successfully deleted $service"
     ((deleted_count++))
   else
+    delete_result=$?
     echo "  ❌ Failed to delete $service (exit code: $delete_result)"
     ((failed_count++))
   fi
