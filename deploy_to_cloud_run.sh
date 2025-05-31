@@ -8,15 +8,17 @@ set -e
 PROJECT_ID=""
 REGION="us-central1"
 ENV_FILE=".env"
+SKIP_CLEANUP=false
 
 # Function to show usage
 function show_usage {
   echo "Usage: $0 [options]"
   echo "Options:"
-  echo "  -p, --project   Google Cloud Project ID (required)"
-  echo "  -r, --region    Google Cloud Region (default: us-central1)"
-  echo "  -e, --env-file  Environment file to use (default: .env)"
-  echo "  -h, --help      Show this help message"
+  echo "  -p, --project     Google Cloud Project ID (required)"
+  echo "  -r, --region      Google Cloud Region (default: us-central1)"
+  echo "  -e, --env-file    Environment file to use (default: .env)"
+  echo "  --skip-cleanup    Skip Docker cleanup to preserve images"
+  echo "  -h, --help        Show this help message"
   echo ""
   echo "Prerequisites:"
   echo "  1. Create secrets in Secret Manager:"
@@ -31,6 +33,51 @@ function show_usage {
   echo "     gcloud secrets add-iam-policy-binding google-api-key --member=\"serviceAccount:\${SERVICE_ACCOUNT}\" --role=\"roles/secretmanager.secretAccessor\""
   echo "     gcloud secrets add-iam-policy-binding huggingface-token --member=\"serviceAccount:\${SERVICE_ACCOUNT}\" --role=\"roles/secretmanager.secretAccessor\""
   exit 1
+}
+
+# Function to cleanup Docker images and free disk space
+function cleanup_docker {
+  echo "===================================================="
+  echo "Cleaning up Docker images to free disk space..."
+  echo "===================================================="
+  
+  # Remove dangling images (untagged images)
+  echo "Removing dangling images..."
+  docker image prune -f || true
+  
+  # Remove images older than 24 hours that are not currently used
+  echo "Removing images older than 24 hours..."
+  docker image prune -a -f --filter "until=24h" || true
+  
+  # Remove old images for this project specifically (keep the latest)
+  echo "Removing old project images (keeping latest)..."
+  for service in "a2a-manager-agent" "a2a-safeguard-agent" "a2a-processor-agent" "a2a-critic-agent"; do
+    # Get all images for this service, sorted by creation date (newest first)
+    old_images=$(docker images "gcr.io/$PROJECT_ID/$service" --format "{{.ID}}" | tail -n +2)
+    if [ ! -z "$old_images" ]; then
+      echo "Removing old images for $service..."
+      echo "$old_images" | while read image_id; do
+        if [ ! -z "$image_id" ]; then
+          echo "  Removing image: $image_id"
+          docker rmi "$image_id" -f 2>/dev/null || true
+        fi
+      done
+    fi
+  done
+  
+  # Clean up build cache older than 24 hours
+  echo "Cleaning up Docker build cache older than 24 hours..."
+  docker builder prune -f --filter "until=24h" || true
+  
+  # Remove unused volumes
+  echo "Removing unused Docker volumes..."
+  docker volume prune -f || true
+  
+  # Show disk usage after cleanup
+  echo "Docker disk usage after cleanup:"
+  docker system df || true
+  
+  echo "Docker cleanup completed."
 }
 
 # Parse command-line arguments
@@ -50,6 +97,10 @@ while [[ $# -gt 0 ]]; do
     -e|--env-file)
       ENV_FILE="$2"
       shift
+      shift
+      ;;
+    --skip-cleanup)
+      SKIP_CLEANUP=true
       shift
       ;;
     -h|--help)
@@ -147,6 +198,11 @@ echo "Region: $REGION"
 echo "Environment file: $ENV_FILE"
 echo "Sensitive credentials will be loaded from Secret Manager"
 echo "Non-sensitive environment variables will be set directly"
+if [ "$SKIP_CLEANUP" = false ]; then
+  echo "Docker cleanup: ENABLED (will remove old images to free disk space)"
+else
+  echo "Docker cleanup: DISABLED (images will be preserved)"
+fi
 read -p "Do you want to continue? (y/n) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -157,6 +213,16 @@ fi
 # Ensure gcloud is configured with the right project
 echo "Setting Google Cloud project to $PROJECT_ID"
 gcloud config set project "$PROJECT_ID"
+
+# Initial cleanup to start with a clean slate
+echo "===================================================="
+echo "Initial Docker cleanup before deployment..."
+echo "===================================================="
+echo "Docker disk usage before cleanup:"
+docker system df || true
+if [ "$SKIP_CLEANUP" = false ]; then
+  cleanup_docker
+fi
 
 # Function to deploy an agent
 function deploy_agent {
@@ -264,4 +330,18 @@ CRITIC_URL = "$(cat url_critic.txt)"
 EOL
 
 echo "Configuration for user_client.py has been generated in cloud_config.py"
-echo "Use the cloud client with: python user_client_cloud.py" 
+echo "Use the cloud client with: python user_client_cloud.py"
+
+# Cleanup Docker images and free disk space
+if [ "$SKIP_CLEANUP" = false ]; then
+  echo ""
+  echo "===================================================="
+  echo "Final Docker cleanup after deployment..."
+  echo "===================================================="
+  cleanup_docker
+  echo ""
+  echo "✓ Deployment completed successfully with Docker cleanup"
+else
+  echo ""
+  echo "✓ Deployment completed successfully (Docker cleanup skipped)"
+fi 
