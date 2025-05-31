@@ -88,28 +88,37 @@ gcloud config set project "$PROJECT_ID"
 echo "Enabling Secret Manager API..."
 gcloud services enable secretmanager.googleapis.com
 
+# Function to create or update a secret
+create_or_update_secret() {
+  local secret_name="$1"
+  local secret_value="$2"
+  
+  echo "Processing secret: $secret_name"
+  
+  # Check if secret exists
+  if gcloud secrets describe "$secret_name" --project="$PROJECT_ID" >/dev/null 2>&1; then
+    echo "Secret '$secret_name' already exists. Adding new version..."
+    echo -n "$secret_value" | gcloud secrets versions add "$secret_name" --data-file=- --project="$PROJECT_ID"
+  else
+    echo "Creating new secret: $secret_name"
+    gcloud secrets create "$secret_name" --replication-policy="automatic" --project="$PROJECT_ID"
+    echo "Adding secret value..."
+    echo -n "$secret_value" | gcloud secrets versions add "$secret_name" --data-file=- --project="$PROJECT_ID"
+  fi
+  echo "✓ Secret '$secret_name' created/updated successfully"
+}
+
 # Create google-api-key secret
 echo "Creating google-api-key secret..."
-if gcloud secrets describe google-api-key >/dev/null 2>&1; then
-  echo "Secret 'google-api-key' already exists. Adding new version..."
-else
-  gcloud secrets create google-api-key --replication-policy="automatic"
-fi
-echo -n "$GOOGLE_API_KEY" | gcloud secrets versions add google-api-key --data-file=-
-echo "✓ google-api-key secret created/updated"
+create_or_update_secret "google-api-key" "$GOOGLE_API_KEY"
 
 # Create huggingface-token secret
 echo "Creating huggingface-token secret..."
-if gcloud secrets describe huggingface-token >/dev/null 2>&1; then
-  echo "Secret 'huggingface-token' already exists. Adding new version..."
-else
-  gcloud secrets create huggingface-token --replication-policy="automatic"
-fi
-echo -n "$HUGGINGFACE_TOKEN" | gcloud secrets versions add huggingface-token --data-file=-
-echo "✓ huggingface-token secret created/updated"
+create_or_update_secret "huggingface-token" "$HUGGINGFACE_TOKEN"
 
 # Get project number and service account
 echo "Setting up permissions..."
+echo "Getting project number for project: $PROJECT_ID"
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
 SERVICE_ACCOUNT="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
@@ -120,13 +129,15 @@ echo "Service Account: $SERVICE_ACCOUNT"
 echo "Granting access to google-api-key secret..."
 gcloud secrets add-iam-policy-binding google-api-key \
   --member="serviceAccount:${SERVICE_ACCOUNT}" \
-  --role="roles/secretmanager.secretAccessor"
+  --role="roles/secretmanager.secretAccessor" \
+  --project="$PROJECT_ID"
 
 # Grant permissions for huggingface-token
 echo "Granting access to huggingface-token secret..."
 gcloud secrets add-iam-policy-binding huggingface-token \
   --member="serviceAccount:${SERVICE_ACCOUNT}" \
-  --role="roles/secretmanager.secretAccessor"
+  --role="roles/secretmanager.secretAccessor" \
+  --project="$PROJECT_ID"
 
 echo ""
 echo "===================================================="
