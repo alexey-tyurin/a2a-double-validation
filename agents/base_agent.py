@@ -37,9 +37,8 @@ class BaseAgent(ABC):
             config: Configuration for the agent
         """
         self.config = config
-        self.app = FastAPI(title=config.name)
-        self.card = self._create_agent_card()
         
+        # Set host and port early in initialization to ensure they're available
         # For Cloud Run deployment, use environment variables for host and port
         # Otherwise use the configured values
         if os.getenv("DEPLOYMENT_ENV") == "cloud":
@@ -61,6 +60,9 @@ class BaseAgent(ABC):
             self.a2a_port = self.config.port
             # FastAPI port is A2A port + 1000 (only used by Manager Agent in local mode)
             self.api_port = self.config.port + 1000
+        
+        self.app = FastAPI(title=config.name)
+        self.card = self._create_agent_card()
         
         # Create A2A server for agent communication with base task manager
         # This will be overridden by specific agent implementations
