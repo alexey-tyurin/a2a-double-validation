@@ -45,9 +45,9 @@ function cleanup_docker {
   echo "Removing dangling images..."
   docker image prune -f || true
   
-  # Remove images older than 24 hours that are not currently used
-  echo "Removing images older than 24 hours..."
-  docker image prune -a -f --filter "until=24h" || true
+  # Remove images older than 2 hours that are not currently used
+  echo "Removing images older than 2 hours..."
+  docker image prune -a -f --filter "until=2h" || true
   
   # Remove old images for this project specifically (keep the latest)
   echo "Removing old project images (keeping latest)..."
@@ -65,9 +65,9 @@ function cleanup_docker {
     fi
   done
   
-  # Clean up build cache older than 24 hours
-  echo "Cleaning up Docker build cache older than 24 hours..."
-  docker builder prune -f --filter "until=24h" || true
+  # Clean up build cache older than 2 hours
+  echo "Cleaning up Docker build cache older than 2 hours..."
+  docker builder prune -f --filter "until=2h" || true
   
   # Remove unused volumes
   echo "Removing unused Docker volumes..."
