@@ -183,20 +183,41 @@ function deploy_agent {
   # Set environment variables and secrets for Cloud Run
   echo "Setting environment variables and secrets for Cloud Run deployment..."
   
-  # Deploy to Cloud Run with environment variables and secrets
-  echo "Deploying service to Cloud Run"
-  gcloud run deploy "$service_name" \
-    --image "$image_name" \
-    --platform managed \
-    --region "$REGION" \
-    --port "$port" \
-    --memory "$memory" \
-    --cpu "$cpu" \
-    --allow-unauthenticated \
-    --min-instances 1 \
-    --max-instances 1 \
-    --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION" \
-    --set-secrets="GOOGLE_API_KEY=google-api-key:latest,HUGGINGFACE_TOKEN=huggingface-token:latest"
+  # For manager agent, we need to set agent URLs after all services are deployed
+  # For now, deploy with basic environment variables
+  if [[ "$agent_name" == "manager" ]]; then
+    # Deploy manager agent with PORT environment variable for Cloud Run
+    echo "Deploying service to Cloud Run"
+    gcloud run deploy "$service_name" \
+      --image "$image_name" \
+      --platform managed \
+      --region "$REGION" \
+      --port "$port" \
+      --memory "$memory" \
+      --cpu "$cpu" \
+      --allow-unauthenticated \
+      --min-instances 1 \
+      --max-instances 1 \
+      --timeout 300 \
+      --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,PORT=$port,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION" \
+      --set-secrets="GOOGLE_API_KEY=google-api-key:latest,HUGGINGFACE_TOKEN=huggingface-token:latest"
+  else
+    # Deploy other agents normally (they only run A2A servers)
+    echo "Deploying service to Cloud Run"
+    gcloud run deploy "$service_name" \
+      --image "$image_name" \
+      --platform managed \
+      --region "$REGION" \
+      --port "$port" \
+      --memory "$memory" \
+      --cpu "$cpu" \
+      --allow-unauthenticated \
+      --min-instances 1 \
+      --max-instances 1 \
+      --timeout 300 \
+      --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,PORT=$port,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION" \
+      --set-secrets="GOOGLE_API_KEY=google-api-key:latest,HUGGINGFACE_TOKEN=huggingface-token:latest"
+  fi
   
   # Get the service URL
   service_url=$(gcloud run services describe "$service_name" --platform managed --region "$REGION" --format='value(status.url)')
@@ -205,10 +226,27 @@ function deploy_agent {
 }
 
 # Deploy each agent
-deploy_agent "manager" "Dockerfile.manager" 9001 "1Gi" "1" 
 deploy_agent "safeguard" "Dockerfile.safeguard" 8002 "2Gi" "2"
 deploy_agent "processor" "Dockerfile.processor" 8003 "2Gi" "2"
 deploy_agent "critic" "Dockerfile.critic" 8004 "1Gi" "1"
+
+# Deploy manager agent last and update it with agent URLs
+deploy_agent "manager" "Dockerfile.manager" 9001 "1Gi" "1"
+
+echo "===================================================="
+echo "Updating Manager Agent with service URLs..."
+echo "===================================================="
+
+# Update manager agent with agent URLs
+SAFEGUARD_URL=$(cat url_safeguard.txt)
+PROCESSOR_URL=$(cat url_processor.txt)
+CRITIC_URL=$(cat url_critic.txt)
+
+# Redeploy manager agent with agent URLs
+gcloud run services update a2a-manager-agent \
+  --platform managed \
+  --region "$REGION" \
+  --set-env-vars="DEPLOYMENT_ENV=cloud,HOST=0.0.0.0,PORT=9001,VERTEX_AI_PROJECT=$VERTEX_AI_PROJECT,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION,SAFEGUARD_URL=$SAFEGUARD_URL,PROCESSOR_URL=$PROCESSOR_URL,CRITIC_URL=$CRITIC_URL"
 
 echo "===================================================="
 echo "All agents deployed successfully!"

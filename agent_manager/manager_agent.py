@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+import os
 from fastapi import Body, Request
 from typing import Dict, Any
 
@@ -25,9 +26,18 @@ class ManagerAgent(BaseAgent):
         self.task_manager.register_task_handler(self.process_a2a_task)
         
         # Construct agent URLs for A2A communication
-        self.safeguard_url = f"http://{SAFEGUARD_CONFIG.host}:{SAFEGUARD_CONFIG.port}"
-        self.processor_url = f"http://{PROCESSOR_CONFIG.host}:{PROCESSOR_CONFIG.port}"
-        self.critic_url = f"http://{CRITIC_CONFIG.host}:{CRITIC_CONFIG.port}"
+        # In cloud mode, use environment variables for service URLs
+        if os.getenv("DEPLOYMENT_ENV") == "cloud":
+            # In cloud mode, agent URLs will be set from environment variables
+            # These will be set by the deployment script after all services are deployed
+            self.safeguard_url = os.getenv("SAFEGUARD_URL", f"http://{SAFEGUARD_CONFIG.host}:{SAFEGUARD_CONFIG.port}")
+            self.processor_url = os.getenv("PROCESSOR_URL", f"http://{PROCESSOR_CONFIG.host}:{PROCESSOR_CONFIG.port}")
+            self.critic_url = os.getenv("CRITIC_URL", f"http://{CRITIC_CONFIG.host}:{CRITIC_CONFIG.port}")
+        else:
+            # Local mode - use localhost URLs
+            self.safeguard_url = f"http://{SAFEGUARD_CONFIG.host}:{SAFEGUARD_CONFIG.port}"
+            self.processor_url = f"http://{PROCESSOR_CONFIG.host}:{PROCESSOR_CONFIG.port}"
+            self.critic_url = f"http://{CRITIC_CONFIG.host}:{CRITIC_CONFIG.port}"
     
     def _setup_api_endpoints(self):
         """Set up external API endpoints for user interaction"""

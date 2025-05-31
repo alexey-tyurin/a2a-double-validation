@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import os
 from config.config import validate_environment, load_environment
 from agent_processor.processor_agent import ProcessorAgent
 
@@ -25,8 +26,18 @@ async def main():
         # Create and start the agent
         agent = ProcessorAgent()
         
-        # Start the agent's server
-        await agent.start_server()
+        # In Cloud Run, only start the A2A server
+        # In local mode, start both A2A server and API server
+        if os.getenv("DEPLOYMENT_ENV") == "cloud":
+            logger.info("Starting Processor Agent in Cloud Run mode (A2A server only)")
+            await agent.start_server()
+        else:
+            logger.info("Starting Processor Agent in local mode (both A2A and API servers)")
+            # Start both A2A server and API server
+            await asyncio.gather(
+                agent.start_server(),
+                agent.start_api_server()
+            )
         
     except Exception as e:
         logger.error(f"Failed to start Processor Agent: {e}")

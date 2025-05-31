@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import os
 from config.config import validate_environment, load_environment
 from agent_manager.manager_agent import ManagerAgent
 
@@ -25,11 +26,18 @@ async def main():
         # Create and start the agent
         agent = ManagerAgent()
         
-        # Start both A2A server and API server
-        await asyncio.gather(
-            agent.start_server(),
-            agent.start_api_server()
-        )
+        # In Cloud Run, only start the API server since it's the external-facing service
+        # In local mode, start both A2A server and API server
+        if os.getenv("DEPLOYMENT_ENV") == "cloud":
+            logger.info("Starting Manager Agent in Cloud Run mode (API server only)")
+            await agent.start_api_server()
+        else:
+            logger.info("Starting Manager Agent in local mode (both A2A and API servers)")
+            # Start both A2A server and API server
+            await asyncio.gather(
+                agent.start_server(),
+                agent.start_api_server()
+            )
         
     except Exception as e:
         logger.error(f"Failed to start Manager Agent: {e}")

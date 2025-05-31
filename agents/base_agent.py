@@ -40,10 +40,18 @@ class BaseAgent(ABC):
         self.app = FastAPI(title=config.name)
         self.card = self._create_agent_card()
         
-        # A2A port is the base port
-        self.a2a_port = self.config.port
-        # FastAPI port is A2A port + 1000 (only used by Manager Agent)
-        self.api_port = self.config.port + 1000
+        # For Cloud Run deployment, use PORT environment variable if available
+        # Otherwise use the configured port
+        cloud_port = os.getenv("PORT")
+        if cloud_port and os.getenv("DEPLOYMENT_ENV") == "cloud":
+            # In cloud mode, all agents listen on the PORT environment variable
+            self.a2a_port = int(cloud_port)
+            self.api_port = int(cloud_port)
+        else:
+            # Local mode - use configured ports
+            self.a2a_port = self.config.port
+            # FastAPI port is A2A port + 1000 (only used by Manager Agent in local mode)
+            self.api_port = self.config.port + 1000
         
         # Create A2A server for agent communication with base task manager
         # This will be overridden by specific agent implementations
@@ -119,7 +127,7 @@ class BaseAgent(ABC):
         config = uvicorn.Config(
             app=self.app,
             host=self.config.host,
-            port=self.api_port  # Use the API port (A2A port + 1000)
+            port=self.api_port  # Use the API port (Cloud Run PORT or A2A port + 1000)
         )
         server = uvicorn.Server(config)
         await server.serve()
