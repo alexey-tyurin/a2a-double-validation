@@ -125,11 +125,17 @@ for service in "${existing_services[@]}"; do
   echo ""
   echo "🗑️  Deleting $service..."
   
-  if gcloud run services delete "$service" --region="$REGION" --quiet; then
+  # Temporarily disable exit on error for individual service deletion
+  set +e
+  gcloud run services delete "$service" --region="$REGION" --quiet
+  delete_result=$?
+  set -e
+  
+  if [[ $delete_result -eq 0 ]]; then
     echo "  ✅ Successfully deleted $service"
     ((deleted_count++))
   else
-    echo "  ❌ Failed to delete $service"
+    echo "  ❌ Failed to delete $service (exit code: $delete_result)"
     ((failed_count++))
   fi
 done
