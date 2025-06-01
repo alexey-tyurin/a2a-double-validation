@@ -469,6 +469,9 @@ python user_client.py
    - Validate that all required variables are set
    - Check that required secrets exist in Secret Manager
    - Build Docker images for each agent
+   - For safeguard Docker image it uses Llama Prompt Guard 2 model downloaded to local cache in previous step.
+     This way safeguard instance will not download Llama Prompt Guard 2 model, and instead use it from its image.
+     This will improve latency.
    - Push them to Google Container Registry
    - Deploy them as Cloud Run services with:
      - Environment variables set via `--set-env-vars` (non-sensitive data)
@@ -552,7 +555,7 @@ When you're done with the project, you can clean up all created resources to avo
 ./kill_cloud_services.sh --project your-gcp-project-id --force
 ```
 
-### 2. Delete VM Instance (if created)
+### 2. Delete VM Instance
 
 ```bash
 # Delete the VM instance
@@ -665,4 +668,4 @@ For any questions or feedback, please contact Alexey Tyurin at altyurin3@gmail.c
 
 ## License
 
-[License](LICENSE)
+This project uses MIT license: [License](LICENSE)
