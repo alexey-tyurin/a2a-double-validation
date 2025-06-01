@@ -346,9 +346,11 @@ gcloud projects add-iam-policy-binding PROJECT_ID \
     --role="roles/iam.serviceAccountAdmin"
 ```
 
-#### 3. Create and Setup VM Instance (Optional - Alternative to Cloud Shell)
+#### 3. Create and Setup VM Instance
 
-If you prefer to use a dedicated VM instead of Cloud Shell:
+Cloud Shell will not work for this project as Cloud Shell is limited to 5GB of disk space.
+This project needs more than 30GB of disk space to build docker images, get all dependencies and 
+  download Llama Prompt Guard 2 model locally. So you need to use a dedicated VM instead of Cloud Shell.
 
 ```bash
 # Create Ubuntu VM with necessary permissions and scopes
@@ -410,15 +412,8 @@ cd a2a-double-validation
    - Grant access permissions to the default compute service account
    - Enable the Secret Manager API if needed
 
-4. For VM-based deployments, you can use the provided setup script:
+4. Run setup script:
    ```bash
-   # Copy the setup script to your cloud VM
-   scp setup_cloud.sh user@your-vm-ip:~/
-   
-   # SSH into your VM and run the script
-   ssh user@your-vm-ip
-   cd ~/
-   chmod +x setup_cloud.sh
    ./setup_cloud.sh
    ```
    
@@ -430,6 +425,7 @@ cd a2a-double-validation
    - Install all dependencies from requirements.txt
    - Apply Python 3.10 compatibility patch if needed
    - Start the application
+   - Download Llama Prompt Guard 2 model in local cache, so it can be used in creating Docker image for safeguard
    
    > **Note**: After Docker installation, you may need to log out and back in for group permissions to take effect. If you plan to use Cloud Run deployment, run `gcloud auth login` after the script completes.
 
@@ -439,7 +435,22 @@ cd a2a-double-validation
    ```
    Then either log out/in, use `newgrp docker`, or try the deployment again.
 
-5. Deploy all agents to Cloud Run:
+5. Run script to check if all processes are running
+   ```bash
+   ./check_processes.sh
+   ```
+
+6. Optionally - run client:
+```bash
+python user_client.py
+```
+
+7. Stop all running processes
+```bash
+./kill_processes.sh
+```
+
+8. Deploy all agents to Cloud Run:
    ```bash
    ./deploy_to_cloud_run.sh --project your-gcp-project-id
    ```
