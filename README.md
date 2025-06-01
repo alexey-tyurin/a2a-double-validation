@@ -283,7 +283,16 @@ The A2A Double Validation system can be deployed to **Google Cloud Platform (Ver
 
 2. **Open Cloud Shell**: Click the Cloud Shell icon (terminal icon) in the top right corner of the Google Cloud Console
 
-3. **Create or select a project**:
+3. **Authenticate with Google Cloud**:
+   ```bash
+   # Authenticate with your Google Cloud account
+   gcloud auth login
+   
+   # Verify authentication
+   gcloud auth list
+   ```
+
+4. **Create or select a project**:
    ```bash
    # Create a new project (replace PROJECT_ID with your desired project ID)
    gcloud projects create PROJECT_ID --name="A2A Double Validation"
@@ -295,7 +304,7 @@ The A2A Double Validation system can be deployed to **Google Cloud Platform (Ver
    gcloud config set project PROJECT_ID
    ```
 
-4. **Enable required APIs**:
+5. **Enable required APIs**:
    ```bash
    # Enable necessary Google Cloud APIs
    gcloud services enable run.googleapis.com
