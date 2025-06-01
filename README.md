@@ -370,43 +370,19 @@ gcloud compute firewall-rules create allow-a2a-vm \
     --description "Allow SSH and A2A ports for A2A Double Validation VM"
 ```
 
-#### 4. Connect to VM and Setup Environment
+#### 4. Connect to VM
 
 ```bash
 # Connect to the VM via SSH
 gcloud compute ssh py310-vm --zone=us-central1-a
-
-# Once connected to the VM, update and install dependencies
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3.10 python3.10-venv python3-pip git curl
-
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
-
-# Install Google Cloud CLI (if not already installed)
-curl https://sdk.cloud.google.com | bash
-exec -l $SHELL
-gcloud init
 ```
 
-#### 5. Clone Repository and Setup
+#### 5. Clone Repository
 
 ```bash
 # Clone the A2A Double Validation repository
 git clone https://github.com/alexey-tyurin/a2a-double-validation.git
 cd a2a-double-validation
-
-# Create and activate virtual environment
-python3.10 -m venv fresh_env
-source fresh_env/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Apply Python 3.10 compatibility patch (if needed)
-python python310_compatibility_patch.py
 ```
 
 ### Deployment Steps
