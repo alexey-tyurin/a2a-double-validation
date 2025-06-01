@@ -266,13 +266,148 @@ The response will include both the answer and an evaluation of the response qual
 
 ## Cloud Deployment
 
-The A2A Double Validation system can be deployed to Google Cloud Run for scalable, serverless operation.
+The A2A Double Validation system can be deployed to **Google Cloud Platform (Vertex AI)** for scalable, serverless operation using Cloud Run and Vertex AI services.
 
 ### Prerequisites
 
-- Google Cloud Platform account
+- Google Cloud Platform account with billing enabled
+- Access to Google Vertex AI services
 - gcloud CLI installed and configured
-- Docker installed locally
+- Docker installed locally (for local development) or access to Cloud Shell
+
+### Google Cloud Setup
+
+#### 1. Setup Cloud Project in Cloud Shell Terminal
+
+1. **Access Google Cloud Console**: Go to [https://console.cloud.google.com](https://console.cloud.google.com)
+
+2. **Open Cloud Shell**: Click the Cloud Shell icon (terminal icon) in the top right corner of the Google Cloud Console
+
+3. **Create or select a project**:
+   ```bash
+   # Create a new project (replace PROJECT_ID with your desired project ID)
+   gcloud projects create PROJECT_ID --name="A2A Double Validation"
+   
+   # Or list existing projects
+   gcloud projects list
+   
+   # Set the active project
+   gcloud config set project PROJECT_ID
+   ```
+
+4. **Enable required APIs**:
+   ```bash
+   # Enable necessary Google Cloud APIs
+   gcloud services enable run.googleapis.com
+   gcloud services enable cloudbuild.googleapis.com
+   gcloud services enable containerregistry.googleapis.com
+   gcloud services enable secretmanager.googleapis.com
+   gcloud services enable aiplatform.googleapis.com
+   gcloud services enable compute.googleapis.com
+   gcloud services enable logging.googleapis.com
+   gcloud services enable cloudresourcemanager.googleapis.com
+   ```
+
+#### 2. Setup Vertex AI Permissions
+
+Grant your account the necessary permissions for Vertex AI and related services:
+
+```bash
+# Get your current account email
+ACCOUNT_EMAIL=$(gcloud config get-value account)
+
+# Grant Vertex AI permissions
+gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/aiplatform.user"
+
+gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/aiplatform.serviceAgent"
+
+# Grant Cloud Run permissions
+gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/run.admin"
+
+# Grant Secret Manager permissions
+gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/secretmanager.admin"
+
+# Grant Compute Engine permissions (for VM creation)
+gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/compute.admin"
+
+# Grant necessary service account permissions
+gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/iam.serviceAccountAdmin"
+```
+
+#### 3. Create and Setup VM Instance (Optional - Alternative to Cloud Shell)
+
+If you prefer to use a dedicated VM instead of Cloud Shell:
+
+```bash
+# Create Ubuntu VM with necessary permissions and scopes
+gcloud compute instances create "py310-vm" \
+    --machine-type="e2-standard-2" \
+    --image-family="ubuntu-2204-lts" \
+    --image-project="ubuntu-os-cloud" \
+    --boot-disk-size="50GB" \
+    --zone="us-central1-a" \
+    --scopes="https://www.googleapis.com/auth/cloud-platform" \
+    --service-account="$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')-compute@developer.gserviceaccount.com" \
+    --tags="a2a-vm"
+
+# Create firewall rule for the VM (if needed for external access)
+gcloud compute firewall-rules create allow-a2a-vm \
+    --allow tcp:22,tcp:8001-8005,tcp:9001-9005 \
+    --source-ranges 0.0.0.0/0 \
+    --target-tags a2a-vm \
+    --description "Allow SSH and A2A ports for A2A Double Validation VM"
+```
+
+#### 4. Connect to VM and Setup Environment
+
+```bash
+# Connect to the VM via SSH
+gcloud compute ssh py310-vm --zone=us-central1-a
+
+# Once connected to the VM, update and install dependencies
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y python3.10 python3.10-venv python3-pip git curl
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Install Google Cloud CLI (if not already installed)
+curl https://sdk.cloud.google.com | bash
+exec -l $SHELL
+gcloud init
+```
+
+#### 5. Clone Repository and Setup
+
+```bash
+# Clone the A2A Double Validation repository
+git clone https://github.com/alexey-tyurin/a2a-double-validation.git
+cd a2a-double-validation
+
+# Create and activate virtual environment
+python3.10 -m venv fresh_env
+source fresh_env/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Apply Python 3.10 compatibility patch (if needed)
+python python310_compatibility_patch.py
+```
 
 ### Deployment Steps
 
@@ -409,6 +544,112 @@ python test_a2a_scenarios_cloud.py
 ```
 
 This will run the same test scenarios as the local test script but against the cloud deployment.
+
+## Cleanup Google Cloud Resources
+
+When you're done with the project, you can clean up all created resources to avoid ongoing charges:
+
+### 1. Delete Cloud Run Services
+
+```bash
+# Delete all A2A Cloud Run services
+./kill_cloud_services.sh --project your-gcp-project-id --force
+```
+
+### 2. Delete VM Instance (if created)
+
+```bash
+# Delete the VM instance
+gcloud compute instances delete py310-vm --zone=us-central1-a --quiet
+
+# Delete the firewall rule
+gcloud compute firewall-rules delete allow-a2a-vm --quiet
+```
+
+### 3. Delete Secrets from Secret Manager
+
+```bash
+# Delete secrets
+gcloud secrets delete google-api-key --quiet
+gcloud secrets delete huggingface-token --quiet
+```
+
+### 4. Clean up Container Images
+
+```bash
+# List and delete container images from Container Registry
+gcloud container images list --repository=gcr.io/your-gcp-project-id
+
+# Delete specific images (replace with actual image names)
+gcloud container images delete gcr.io/your-gcp-project-id/a2a-manager-agent --force-delete-tags --quiet
+gcloud container images delete gcr.io/your-gcp-project-id/a2a-safeguard-agent --force-delete-tags --quiet
+gcloud container images delete gcr.io/your-gcp-project-id/a2a-processor-agent --force-delete-tags --quiet
+gcloud container images delete gcr.io/your-gcp-project-id/a2a-critic-agent --force-delete-tags --quiet
+```
+
+### 5. Remove IAM Policy Bindings (Optional)
+
+```bash
+# Get your account email
+ACCOUNT_EMAIL=$(gcloud config get-value account)
+PROJECT_ID=$(gcloud config get-value project)
+
+# Remove Vertex AI permissions
+gcloud projects remove-iam-policy-binding $PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/aiplatform.user"
+
+gcloud projects remove-iam-policy-binding $PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/aiplatform.serviceAgent"
+
+# Remove other permissions (only if you don't need them for other projects)
+gcloud projects remove-iam-policy-binding $PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/run.admin"
+
+gcloud projects remove-iam-policy-binding $PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/secretmanager.admin"
+
+gcloud projects remove-iam-policy-binding $PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/compute.admin"
+
+gcloud projects remove-iam-policy-binding $PROJECT_ID \
+    --member="user:$ACCOUNT_EMAIL" \
+    --role="roles/iam.serviceAccountAdmin"
+```
+
+### 6. Delete the Entire Project (Nuclear Option)
+
+If you created a dedicated project for this A2A system and want to remove everything:
+
+```bash
+# ⚠️ WARNING: This will delete the ENTIRE project and ALL resources in it
+# Make sure this project only contains A2A resources
+gcloud projects delete your-gcp-project-id
+```
+
+> **Important**: Deleting the project will remove ALL resources, billing data, and access permissions. This action cannot be undone.
+
+### 7. Verify Cleanup
+
+Check that all resources have been removed:
+
+```bash
+# Check Cloud Run services
+gcloud run services list --region=us-central1
+
+# Check VM instances
+gcloud compute instances list
+
+# Check secrets
+gcloud secrets list
+
+# Check container images
+gcloud container images list --repository=gcr.io/your-gcp-project-id
+```
 
 ## 🙏 Acknowledgements
 
