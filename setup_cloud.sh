@@ -93,16 +93,16 @@ fi
 
 # Create virtual environment
 echo "Creating virtual environment..."
-#python3.10 -m venv venv
-#source venv/bin/activate
+python3.10 -m venv venv
+source venv/bin/activate
 
 # Upgrade pip
 echo "Upgrading pip..."
-#pip install --upgrade pip
+pip install --upgrade pip
 
 # Install dependencies
 echo "Installing dependencies from requirements.txt..."
-# pip install -r requirements.txt
+pip install --no-cache-dir -r requirements.txt
 
 # Apply Python 3.10 compatibility patch if needed
 if [ -f "python310_compatibility_patch.py" ]; then
@@ -112,4 +112,4 @@ fi
 
 # Run the application
 echo "Setup complete. Starting the application..."
-# python main.py
+python main.py &

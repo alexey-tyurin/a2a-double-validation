@@ -390,20 +390,6 @@ The deletion script will:
 
 > **Note**: Deleting Cloud Run services is permanent and cannot be undone. The services will need to be redeployed using the deployment script.
 
-### Cloud Process Management
-
-When running in a cloud environment, you can use the included process management scripts:
-
-```bash
-# Check status of all processes
-./check_processes.sh
-
-# Stop all processes (useful before redeployment)
-./kill_processes.sh
-```
-
-These scripts are particularly useful for VM-based deployments where you need to monitor process health or restart services.
-
 ### Cloud Client
 
 Once deployed, you can interact with the cloud-deployed system using the cloud client:
